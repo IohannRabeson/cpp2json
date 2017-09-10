@@ -1,0 +1,41 @@
+{
+  "enums": {},
+  "classes": {
+    "ClassTestIntegralTypes": {
+      "annotations": [],
+      "methods": [],
+      "fields": [
+        {
+          "name": "a_boolean",
+          "type": "_Bool",
+          "arraySize": 1
+        },
+        {
+          "name": "an_integer",
+          "type": "int",
+          "arraySize": 2
+        },
+        {
+          "name": "an_unsigned_integer",
+          "type": "unsigned int",
+          "arraySize": 3
+        },
+        {
+          "name": "a_float",
+          "type": "float",
+          "arraySize": 4
+        },
+        {
+          "name": "a_double",
+          "type": "double",
+          "arraySize": 5
+        },
+        {
+          "name": "a_long_double",
+          "type": "long double",
+          "arraySize": 6
+        }
+      ]
+    }
+  }
+}

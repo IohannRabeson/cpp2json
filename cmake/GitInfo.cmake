@@ -1,0 +1,10 @@
+macro(gather_git_infos)
+    exec_program(git "${CMAKE_SOURCE_DIR}" ARGS "describe --abbrev=0 --tags --always" OUTPUT_VARIABLE GIT_TAG ERROR_QUIET)
+    exec_program(git "${CMAKE_SOURCE_DIR}" ARGS "rev-parse --abbrev-ref HEAD" OUTPUT_VARIABLE GIT_BRANCH)
+    exec_program(git "${CMAKE_SOURCE_DIR}" ARGS "rev-parse --short HEAD" OUTPUT_VARIABLE GIT_SHORT_COMMIT)
+    string(STRIP "${GIT_TAG}" GIT_TAG)
+    string(STRIP "${GIT_BRANCH}" GIT_BRANCH)
+    string(STRIP "${GIT_SHORT_COMMIT}" GIT_SHORT_COMMIT)
+endmacro(gather_git_infos)
+
+gather_git_infos()

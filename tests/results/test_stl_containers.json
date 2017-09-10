@@ -1,0 +1,51 @@
+{
+  "enums": {},
+  "classes": {
+    "ClassTestStlContainerTypes": {
+      "annotations": [],
+      "methods": [],
+      "fields": [
+        {
+          "name": "a_string",
+          "type": "std::string"
+        },
+        {
+          "name": "a_vector_string",
+          "type": "std::vector<std::string>"
+        },
+        {
+          "name": "a_list_string",
+          "type": "std::list<std::string>"
+        },
+        {
+          "name": "a_set_string",
+          "type": "std::set<std::string>"
+        },
+        {
+          "name": "a_multiset_string",
+          "type": "std::multiset<std::string>"
+        },
+        {
+          "name": "a_map_string",
+          "type": "std::map<std::string, std::string>"
+        },
+        {
+          "name": "a_multimap_string",
+          "type": "std::multimap<std::string, std::string>"
+        },
+        {
+          "name": "an_array_string",
+          "type": "std::array<std::string, 123U>"
+        },
+        {
+          "name": "an_unordered_set_string",
+          "type": "std::unordered_set<std::string>"
+        },
+        {
+          "name": "an_unordered_multiset_string",
+          "type": "std::unordered_multiset<std::string>"
+        }
+      ]
+    }
+  }
+}
