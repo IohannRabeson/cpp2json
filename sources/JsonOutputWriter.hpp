@@ -14,8 +14,6 @@ public:
 
     bool write(rapidjson::Document const& document)const;
 private:
-    using JsonWriter = rapidjson::Writer<rapidjson::OStreamWrapper>;
-
     bool writeJsonToOStream(rapidjson::Document const& document, std::ostream& os)const;
 private:
     Cpp2JsonParameters const& m_parameters;

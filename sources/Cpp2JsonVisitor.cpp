@@ -120,8 +120,8 @@ void Cpp2JsonVisitor::parseEnum(clang::EnumDecl *enumDeclaration)
         jsonEnumValues.AddMember(jsonEnumeratorValue, enumerator->getInitVal().getExtValue(), m_jsonAllocator);
     }
     jsonEnum.AddMember("values", jsonEnumValues, m_jsonAllocator);
-    addOrReplaceJsonMember(m_jsonEnums, enumDeclaration->getQualifiedNameAsString(), jsonEnum);
     parseAnnotations(enumDeclaration, jsonEnum);
+    addOrReplaceJsonMember(m_jsonEnums, enumDeclaration->getQualifiedNameAsString(), jsonEnum);
 }
 
 void Cpp2JsonVisitor::parseAnnotations(clang::Decl const* classDeclaration, rapidjson::Value& jsonObject)
@@ -286,6 +286,16 @@ bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXMethodDecl const* declarat
             declaration->isStatic());
 }
 
+bool Cpp2JsonVisitor::isExcludedDeclaration(clang::EnumDecl const* declaration) const
+{
+    return !isInMainFile(declaration) || hasAnnotation(declaration, ExcludeParsingAnnotation);
+}
+
+bool Cpp2JsonVisitor::isExcludedDeclaration(clang::FieldDecl const* declaration) const
+{
+    return hasAnnotation(declaration, ExcludeParsingAnnotation);
+}
+
 void Cpp2JsonVisitor::addOrReplaceJsonMember(rapidjson::Value::Object &object, const std::string &key, rapidjson::Value& value)
 {
     auto memberIt = object.FindMember(key);
@@ -295,14 +305,4 @@ void Cpp2JsonVisitor::addOrReplaceJsonMember(rapidjson::Value::Object &object, c
         object.EraseMember(memberIt);
     }
     object.AddMember(rapidjson::Value(key, m_jsonAllocator), value, m_jsonAllocator);
-}
-
-bool Cpp2JsonVisitor::isExcludedDeclaration(clang::EnumDecl const* declaration) const
-{
-    return !isInMainFile(declaration) || hasAnnotation(declaration, ExcludeParsingAnnotation);
-}
-
-bool Cpp2JsonVisitor::isExcludedDeclaration(clang::FieldDecl const* declaration) const
-{
-    return hasAnnotation(declaration, ExcludeParsingAnnotation);
 }

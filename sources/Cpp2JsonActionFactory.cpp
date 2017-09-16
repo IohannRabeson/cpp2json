@@ -1,5 +1,6 @@
 #include "Cpp2JsonActionFactory.hpp"
 #include "Cpp2JsonAction.hpp"
+#include "Cpp2JsonParameters.hpp"
 
 Cpp2JsonActionFactory::Cpp2JsonActionFactory(Cpp2JsonParameters const& parameters, rapidjson::Document& document) :
     m_jsonDocument(document),

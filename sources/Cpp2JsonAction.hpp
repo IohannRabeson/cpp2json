@@ -11,7 +11,7 @@ class Cpp2JsonAction : public clang::ASTFrontendAction
 public:
     explicit Cpp2JsonAction(Cpp2JsonParameters const& parameters, rapidjson::Document& jsonDocument);
 protected:
-    std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, llvm::StringRef InFile) override;
+    std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance& compilerInstance, llvm::StringRef inFile) override;
 private:
     Cpp2JsonParameters const& m_parameters;
     rapidjson::Document& m_jsonDocument;

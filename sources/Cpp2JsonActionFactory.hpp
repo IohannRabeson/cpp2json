@@ -1,9 +1,9 @@
 #ifndef CPP2JSONACTIONFACTORY_HPP
 #define CPP2JSONACTIONFACTORY_HPP
-#include "Cpp2JsonParameters.hpp"
-
 #include <clang/Tooling/Tooling.h>
 #include <rapidjson/document.h>
+
+struct Cpp2JsonParameters;
 
 class Cpp2JsonActionFactory : public clang::tooling::FrontendActionFactory
 {
