@@ -109,3 +109,9 @@ Example:
 ```
 This is required because clang assume the executable is located in a standard directory (in llvm/bin) and use that
 to deduce the includes paths.
+
+## How to build
+
+  $> mkdir builds && cd builds
+  $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH=<your_path_to_llvm_install>
+  $> ninja

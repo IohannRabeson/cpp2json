@@ -1,0 +1,29 @@
+sudo: required
+os: osx
+osx_image: xcode8.3
+language: cpp
+compiler:
+- clang
+before_install:
+- export VERSION_NUMBER="v$TAG_RELEASE_VERSION.$TRAVIS_BUILD_NUMBER"
+- export BUILD_DIRECTORY="./builds"
+
+- ./scripts/travis/$TRAVIS_OS_NAME/setup_requirements.sh
+
+script:
+- ./scripts/travis/$TRAVIS_OS_NAME/build_all.sh "$BUILD_DIRECTORY"
+- ./scripts/travis/run_tests.sh "$BUILD_DIRECTORY"
+
+# Do not builds branch produced by travis deployement system.
+# Theses branches are named with a version number (such as v.1.2.3 or v.2.3.4-yolo).
+branches:
+  except:
+  - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+
+env:
+  matrix:
+  - CONFIG=Debug
+  - CONFIG=Release
+
+matrix:
+  fast_finish: true
