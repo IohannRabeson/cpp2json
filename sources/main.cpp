@@ -16,7 +16,7 @@
 static std::string const LlvmBasePath{LLVM_DIR};
 
 static llvm::cl::OptionCategory cpp2JsonCategory("Main options");
-static llvm::cl::opt<std::string> outputFileOption("output",
+static llvm::cl::opt<std::string> outputFile("output",
                                                    llvm::cl::init("-"),
                                                    llvm::cl::desc("Specify output JSON filename.\n"
                                                                   "You can also send the output to the stdout using - instead of a filename"),
@@ -31,6 +31,12 @@ static llvm::cl::opt<bool> prettyOutput("pretty",
                                         llvm::cl::init(false),
                                         llvm::cl::desc("Output pretty JSON"),
                                         llvm::cl::cat(cpp2JsonCategory));
+
+static llvm::cl::opt<std::string> excludeAnnotation("exclude_annotation",
+                                                   llvm::cl::init("Exclude_cpp2json"),
+                                                   llvm::cl::desc("Specify the content for exclude annotation"),
+                                                   llvm::cl::value_desc("annotation content"),
+                                                   llvm::cl::cat(cpp2JsonCategory));
 
 static void readJsonDocumentFromFile(rapidjson::Document& document, std::string const& filePath)
 {
@@ -52,9 +58,10 @@ static Cpp2JsonParameters makeParameters()
 {
     Cpp2JsonParameters parameters;
 
-    parameters.outputFilePath = outputFileOption.getValue();
+    parameters.outputFilePath = outputFile.getValue();
     parameters.prettyOutput = prettyOutput.getValue();
     parameters.appendOutput = appendOutput.getValue();
+    parameters.excludeAnnotationContent = excludeAnnotation.getValue();
     return parameters;
 }
 

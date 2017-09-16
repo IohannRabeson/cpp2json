@@ -94,9 +94,10 @@ $> cpp2json test03.hpp -pretty -- -std=c++14
 ```bash
   cpp2json [options] <source0> [... <sourceN>] -- [clang options]
 
-  -output=<filename>         - Specify output JSON filename.
-                               You can also send the output to the stdout using - instead of a filename  
-  -pretty                    - Output pretty JSON
+  -output=<filename>                       - Specify output JSON filename.
+                                             You can also send the output to the stdout using - instead of a filename
+  -pretty                                  - Output pretty JSON
+  -exclude_annotation=<annotation content> - Specify the content for exclude annotation.
 ```
 Note the --, it's really needed because this flag define where the options passed to the clang driver begins.  
 If cpp2json can't find standard includes (it can happen if you have moved cpp2json in another location), you should specify
