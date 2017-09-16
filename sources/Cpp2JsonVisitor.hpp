@@ -24,6 +24,7 @@ private:
     void parseFields(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
     void parseBaseClasses(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
     void parseClassTemplateParameters(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
+    void parseIncludeDeclaration(clang::Decl* declaration, rapidjson::Value& jsonObject);
 
     bool isExcludedDeclaration(clang::CXXRecordDecl const* declaration)const;
     bool isExcludedDeclaration(clang::EnumDecl const* declaration)const;
