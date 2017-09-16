@@ -37,7 +37,7 @@ struct Test8
 ```
 
 ```bash
-$> cpp2json test.03.hpp -pretty -- -std=c++14
+$> cpp2json test03.hpp -pretty -- -std=c++14
 ```
 
 ```json
