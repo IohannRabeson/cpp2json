@@ -105,7 +105,7 @@ yourself using the correct llvm include paths using -I (after the --).
 Don't forget to specify the c++ version used too as clang option (e.g: -std=c++14).
 Example:
 ```
-  cpp2json [options] <source0> [... <sourceN>] -- -I /usr/local/opt/llvm/include/c++/v1 /usr/local/opt/llvm/lib/clang/4.0.1/include/
+  cpp2json [options] <source0> [... <sourceN>] -- -std=c++14
 ```
 This is required because clang assume the executable is located in a standard directory (in llvm/bin) and use that
 to deduce the includes paths.
