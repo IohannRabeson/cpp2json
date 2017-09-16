@@ -1,4 +1,4 @@
-# Cpp2Json
+# Cpp2Json [![Build Status](https://travis-ci.com/IohannRabeson/cpp2json.svg?token=oSgYDG8ZHmxB1gxGNZxP&branch=master)](https://travis-ci.com/IohannRabeson/cpp2json) 
 
 A tool to extract meta-informations about C++ code to JSON.  
 
@@ -37,7 +37,7 @@ struct Test8
 ```
 
 ```bash
-$> cpp2json test.03.hpp -pretty -- -std=c++14
+$> cpp2json test03.hpp -pretty -- -std=c++14
 ```
 
 ```json
@@ -105,7 +105,14 @@ yourself using the correct llvm include paths using -I (after the --).
 Don't forget to specify the c++ version used too as clang option (e.g: -std=c++14).
 Example:
 ```
-  cpp2json [options] <source0> [... <sourceN>] -- -I /usr/local/opt/llvm/include/c++/v1 /usr/local/opt/llvm/lib/clang/4.0.1/include/
+  cpp2json [options] <source0> [... <sourceN>] -- -std=c++14
 ```
 This is required because clang assume the executable is located in a standard directory (in llvm/bin) and use that
 to deduce the includes paths.
+
+## How to build
+```bash
+   $> mkdir builds && cd builds
+   $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH=<your_path_to_llvm_install>
+   $> ninja
+```
