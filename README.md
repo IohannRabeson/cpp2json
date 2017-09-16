@@ -111,7 +111,8 @@ This is required because clang assume the executable is located in a standard di
 to deduce the includes paths.
 
 ## How to build
-
-  $> mkdir builds && cd builds
-  $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH=<your_path_to_llvm_install>
-  $> ninja
+```bash
+   $> mkdir builds && cd builds
+   $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH=<your_path_to_llvm_install>
+   $> ninja
+```
