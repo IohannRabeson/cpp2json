@@ -3,8 +3,6 @@
 
 #include <iostream>
 
-std::string const Cpp2JsonVisitor::ExcludeParsingAnnotation = "Exclude_cpp2json";
-
 namespace
 {
     bool isInMainFile(clang::Decl const* declaration)
@@ -64,7 +62,8 @@ namespace
     }
 }
 
-Cpp2JsonVisitor::Cpp2JsonVisitor(rapidjson::Document& jsonDocument) :
+Cpp2JsonVisitor::Cpp2JsonVisitor(Cpp2JsonParameters const& parameters, rapidjson::Document& jsonDocument) :
+    m_parameters(parameters),
     m_jsonDocument(jsonDocument),
     m_jsonAllocator(m_jsonDocument.GetAllocator()),
     m_jsonClasses(getOrCreate(m_jsonDocument, "classes", rapidjson::Type::kObjectType).GetObject()),
@@ -193,7 +192,7 @@ void Cpp2JsonVisitor::parseFields(clang::CXXRecordDecl *classDeclaration, rapidj
     {
         clang::FieldDecl* const fieldDeclaration = *fieldIt;
 
-        if (!isExcludedDeclaration(fieldDeclaration))
+        if (!hasExcludeAnnotation(fieldDeclaration))
         {
             parseField(fieldDeclaration, jsonFieldArray);
         }
@@ -272,12 +271,12 @@ void Cpp2JsonVisitor::parseClassTemplateParameters(clang::CXXRecordDecl *classDe
 
 bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXRecordDecl const* declaration) const
 {
-    return (!isInMainFile(declaration) || hasAnnotation(declaration, ExcludeParsingAnnotation));
+    return (!isInMainFile(declaration) || hasExcludeAnnotation(declaration));
 }
 
 bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXMethodDecl const* declaration) const
 {
-    return (hasAnnotation(declaration, ExcludeParsingAnnotation) ||
+    return (hasExcludeAnnotation(declaration) ||
             declaration->isUserProvided() ||
             declaration->isCopyAssignmentOperator() ||
             declaration->isMoveAssignmentOperator() ||
@@ -288,12 +287,12 @@ bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXMethodDecl const* declarat
 
 bool Cpp2JsonVisitor::isExcludedDeclaration(clang::EnumDecl const* declaration) const
 {
-    return !isInMainFile(declaration) || hasAnnotation(declaration, ExcludeParsingAnnotation);
+    return !isInMainFile(declaration) || hasExcludeAnnotation(declaration);
 }
 
-bool Cpp2JsonVisitor::isExcludedDeclaration(clang::FieldDecl const* declaration) const
+bool Cpp2JsonVisitor::hasExcludeAnnotation(clang::Decl const* declaration) const
 {
-    return hasAnnotation(declaration, ExcludeParsingAnnotation);
+    return hasAnnotation(declaration, m_parameters.excludeAnnotationContent);
 }
 
 void Cpp2JsonVisitor::addOrReplaceJsonMember(rapidjson::Value::Object &object, const std::string &key, rapidjson::Value& value)

@@ -10,7 +10,7 @@ class Cpp2JsonConsumer : public clang::ASTConsumer
 {
 public:
     explicit Cpp2JsonConsumer(Cpp2JsonParameters const& parameters, rapidjson::Document& jsonDocument) :
-        m_visitor(jsonDocument)
+        m_visitor(parameters, jsonDocument)
     {
     }
 
