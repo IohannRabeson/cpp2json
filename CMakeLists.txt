@@ -13,8 +13,8 @@ include("${CMAKE_SOURCE_DIR}/cmake/GitInfo.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/PrependList.cmake")
 include("${CMAKE_SOURCE_DIR}/cmake/CreateTest.cmake")
 
-enable_testing()
+# Test are currently disabled
+#enable_testing()
+#add_subdirectory(tests)
 add_subdirectory(sources)
-add_subdirectory(shared)
-add_subdirectory(tests)
 

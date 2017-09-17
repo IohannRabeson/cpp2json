@@ -102,6 +102,7 @@ void Cpp2JsonVisitor::parseClass(clang::CXXRecordDecl *classDeclaration)
     parseAnnotations(classDeclaration, jsonClassObject);
     parseClassTemplateParameters(classDeclaration, jsonClassObject);
     parseBaseClasses(classDeclaration, jsonClassObject);
+    parseIncludeDeclaration(classDeclaration, jsonClassObject);
     addOrReplaceJsonMember(m_jsonClasses, classDeclaration->getQualifiedNameAsString(), jsonClassObject);
 }
 
@@ -120,6 +121,7 @@ void Cpp2JsonVisitor::parseEnum(clang::EnumDecl *enumDeclaration)
     }
     jsonEnum.AddMember("values", jsonEnumValues, m_jsonAllocator);
     parseAnnotations(enumDeclaration, jsonEnum);
+    parseIncludeDeclaration(enumDeclaration, jsonEnum);
     addOrReplaceJsonMember(m_jsonEnums, enumDeclaration->getQualifiedNameAsString(), jsonEnum);
 }
 
@@ -267,6 +269,15 @@ void Cpp2JsonVisitor::parseClassTemplateParameters(clang::CXXRecordDecl *classDe
             jsonClassObject.AddMember("templateParameters", jsonTemplateParameters, m_jsonAllocator);
         }
     }
+}
+
+void Cpp2JsonVisitor::parseIncludeDeclaration(clang::Decl* declaration, rapidjson::Value& jsonObject)
+{
+    auto const& sourceManager = declaration->getASTContext().getSourceManager();
+    auto const location = declaration->getLocation();
+    std::string const fileName = sourceManager.getFilename(location);
+
+    jsonObject.AddMember("file", fileName, m_jsonAllocator);
 }
 
 bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXRecordDecl const* declaration) const
