@@ -1,6 +1,6 @@
 # Cpp2Json [![Build Status](https://travis-ci.com/IohannRabeson/cpp2json.svg?token=oSgYDG8ZHmxB1gxGNZxP&branch=master)](https://travis-ci.com/IohannRabeson/cpp2json) 
 
-A tool to extract AST datas from C++ code.  
+A tool to extract C++ classes informations about methods and attributes.  
 Idea from Sergiy Migdalskiy: https://archive.org/details/GDC2014Migdalskiy
 
 ## Example
