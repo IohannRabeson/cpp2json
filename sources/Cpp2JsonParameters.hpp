@@ -5,10 +5,16 @@
 
 struct Cpp2JsonParameters
 {
+    Cpp2JsonParameters() :
+        prettyOutput(false),
+        appendOutput(false)
+    {
+    }
+
     std::string outputFilePath;
+    std::string excludeAnnotationContent;
     bool prettyOutput;
     bool appendOutput;
-    std::string excludeAnnotationContent;
 };
 
 #endif // CPP2JSONPARAMETERS_HPP
