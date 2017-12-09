@@ -4,8 +4,6 @@
 #include <vector>
 #include <unordered_set>
 
-#include "../shared/Cpp2JsonAnnotations.hpp"
-
 namespace burk
 {
     enum YoloEnum

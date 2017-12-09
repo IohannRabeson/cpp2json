@@ -4,8 +4,6 @@
 #include <vector>
 #include <unordered_set>
 
-#include "../shared/Cpp2JsonAnnotations.hpp"
-
 namespace burp
 {
     struct __attribute__((annotate("yolo"))) __attribute__((annotate("gerialize"))) Test
