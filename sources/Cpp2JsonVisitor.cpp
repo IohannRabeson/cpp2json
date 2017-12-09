@@ -288,7 +288,7 @@ bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXRecordDecl const* declarat
 bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXMethodDecl const* declaration) const
 {
     return (hasExcludeAnnotation(declaration) ||
-            declaration->isUserProvided() ||
+            !declaration->isUserProvided() ||
             declaration->isCopyAssignmentOperator() ||
             declaration->isMoveAssignmentOperator() ||
             isConstructor(declaration) ||
