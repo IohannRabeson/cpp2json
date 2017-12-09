@@ -69,6 +69,12 @@ Cpp2JsonVisitor::Cpp2JsonVisitor(Cpp2JsonParameters const& parameters, rapidjson
     m_jsonClasses(getOrCreate(m_jsonDocument, "classes", rapidjson::Type::kObjectType).GetObject()),
     m_jsonEnums(getOrCreate(m_jsonDocument, "enums", rapidjson::Type::kObjectType).GetObject())
 {
+    addTypeNameReplacer("_Bool", "bool");
+}
+
+void Cpp2JsonVisitor::addTypeNameReplacer(std::string const& original, std::string const& replacement)
+{
+    m_typeNameReplacer.emplace(original, replacement);
 }
 
 bool Cpp2JsonVisitor::VisitEnumDecl(clang::EnumDecl *declaration)
@@ -112,7 +118,7 @@ void Cpp2JsonVisitor::parseEnum(clang::EnumDecl *enumDeclaration)
     rapidjson::Value jsonEnum(rapidjson::Type::kObjectType);
     rapidjson::Value jsonEnumValues(rapidjson::Type::kObjectType);
 
-    jsonEnum.AddMember("underlyingType", integerTypeDeclaration.getAsString(), m_jsonAllocator);
+    jsonEnum.AddMember("underlyingType", getNormalizedTypeString(integerTypeDeclaration), m_jsonAllocator);
     for (auto const enumerator : enumDeclaration->enumerators())
     {
         rapidjson::Value jsonEnumeratorValue(enumerator->getNameAsString(), m_jsonAllocator);
@@ -147,7 +153,7 @@ void Cpp2JsonVisitor::parseMethod(clang::CXXMethodDecl const *methodDeclaration,
     rapidjson::Value jsonMethodName(methodDeclaration->getNameAsString(), m_jsonAllocator);
     rapidjson::Value jsonMethodParameters(rapidjson::Type::kArrayType);
     rapidjson::Value::Array jsonMethodParametersArray = jsonMethodParameters.GetArray();
-    rapidjson::Value jsonReturnType(returnType.getAsString(), m_jsonAllocator);
+    rapidjson::Value jsonReturnType(getNormalizedTypeString(returnType), m_jsonAllocator);
 
     parseFunctionParameters(methodDeclaration, jsonMethodParametersArray);
     jsonMethod.AddMember("name", jsonMethodName, m_jsonAllocator);
@@ -175,10 +181,10 @@ void Cpp2JsonVisitor::parseFunctionParameters(clang::FunctionDecl const* functio
 {
     for (clang::ParmVarDecl const* parameterDeclaration : functionDecl->parameters())
     {
-        auto const parameterType = parameterDeclaration->getType();
+        clang::QualType const parameterType = parameterDeclaration->getType();
         rapidjson::Value jsonParameter(rapidjson::Type::kObjectType);
         rapidjson::Value jsonParamName(parameterDeclaration->getNameAsString(), m_jsonAllocator);
-        rapidjson::Value jsonParamType(parameterType.getAsString(), m_jsonAllocator);
+        rapidjson::Value jsonParamType(getNormalizedTypeString(parameterType), m_jsonAllocator);
 
         jsonParameter.AddMember("name", jsonParamName, m_jsonAllocator);
         jsonParameter.AddMember("type", jsonParamType, m_jsonAllocator);
@@ -206,7 +212,7 @@ void Cpp2JsonVisitor::parseField(clang::FieldDecl *fieldDeclaration, rapidjson::
 {
     auto const fieldName = fieldDeclaration->getNameAsString();
     auto const fieldType = fieldDeclaration->getType().getLocalUnqualifiedType();
-    auto const fieldTypeName = fieldType.getAsString();
+    auto const fieldTypeName = getNormalizedTypeString(fieldType);
     rapidjson::Value jsonFieldObject(rapidjson::Type::kObjectType);
 
     jsonFieldObject.AddMember("name", fieldName, m_jsonAllocator);
@@ -219,7 +225,7 @@ void Cpp2JsonVisitor::parseField(clang::FieldDecl *fieldDeclaration, rapidjson::
         auto const elementType = constantArrayType->getElementType();
         auto const size = constantArrayType->getSize().getLimitedValue();
 
-        jsonFieldObject.AddMember("type", elementType.getAsString(), m_jsonAllocator);
+        jsonFieldObject.AddMember("type", getNormalizedTypeString(elementType), m_jsonAllocator);
         jsonFieldObject.AddMember("arraySize", size, m_jsonAllocator);
     }
     else
@@ -288,7 +294,7 @@ bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXRecordDecl const* declarat
 bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXMethodDecl const* declaration) const
 {
     return (hasExcludeAnnotation(declaration) ||
-            !declaration->isUserProvided() ||
+            !declaration->isUserProvided() || // isUserProvided ? I don't remember what that means.
             declaration->isCopyAssignmentOperator() ||
             declaration->isMoveAssignmentOperator() ||
             isConstructor(declaration) ||
@@ -315,4 +321,16 @@ void Cpp2JsonVisitor::addOrReplaceJsonMember(rapidjson::Value::Object &object, c
         object.EraseMember(memberIt);
     }
     object.AddMember(rapidjson::Value(key, m_jsonAllocator), value, m_jsonAllocator);
+}
+
+std::string Cpp2JsonVisitor::getNormalizedTypeString(const clang::QualType qualType) const
+{
+    std::string nameAsString = qualType.getAsString();
+    auto it = m_typeNameReplacer.find(nameAsString);
+
+    if (it != m_typeNameReplacer.end())
+    {
+        nameAsString = it->second;
+    }
+    return nameAsString;
 }

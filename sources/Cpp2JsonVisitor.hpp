@@ -10,6 +10,8 @@ class Cpp2JsonVisitor : public clang::RecursiveASTVisitor<Cpp2JsonVisitor>
 public:
     explicit Cpp2JsonVisitor(Cpp2JsonParameters const& parameters, rapidjson::Document& jsonDocument);
 
+    void addTypeNameReplacer(std::string const& original, std::string const& replacement);
+
     bool VisitEnumDecl(clang::EnumDecl* declaration);
     bool VisitCXXRecordDecl(clang::CXXRecordDecl* declaration);
 private:
@@ -30,9 +32,12 @@ private:
     bool isExcludedDeclaration(clang::EnumDecl const* declaration)const;
     bool isExcludedDeclaration(clang::CXXMethodDecl const* declaration)const;
     bool hasExcludeAnnotation(clang::Decl const* declaration)const;
-private:
+
     void addOrReplaceJsonMember(rapidjson::Value::Object& object, std::string const& key, rapidjson::Value &value);
+
+    std::string getNormalizedTypeString(clang::QualType const qualType) const;
 private:
+    std::map<std::string, std::string> m_typeNameReplacer;
     Cpp2JsonParameters const& m_parameters;
     rapidjson::Document& m_jsonDocument;
     rapidjson::Document::AllocatorType& m_jsonAllocator;
