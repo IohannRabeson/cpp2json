@@ -29,6 +29,7 @@ get_filename_component(LLVM_DIR ${LLVM_INCLUDE_DIR} DIRECTORY)
 
 target_link_libraries(cpp2json PRIVATE cpp2json-core)
 target_compile_definitions(cpp2json PRIVATE LLVM_DIR="${LLVM_DIR}")
+target_compile_definitions(cpp2json PRIVATE __STDC_CONSTANT_MACROS __STDC_LIMIT_MACROS RAPIDJSON_HAS_STDSTRING=1)
 
 set_target_properties(cpp2json-core PROPERTIES COMPILE_FLAGS ${LLVM_COMPILE_FLAGS})
 target_link_libraries(cpp2json-core PRIVATE ${LLVM_LIBS_CORE} ${CLANG_LIBS} ${Boost_LIBRARIES} ${LLVM_LDFLAGS})
