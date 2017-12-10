@@ -1,5 +1,8 @@
 # Cpp2Json [![Build Status](https://travis-ci.com/IohannRabeson/cpp2json.svg?token=oSgYDG8ZHmxB1gxGNZxP&branch=master)](https://travis-ci.com/IohannRabeson/cpp2json) 
 
+![general_usage](https://docs.google.com/drawings/d/e/2PACX-1vSvz2O3s9Oica9CyYAUq42n7U62ygswZS-CPsdTIPUDFLky-4Ff0zx-U-kBqJSubkmiBsJ9GsByTDsl/pub?w=1149&h=542)
+
+
 A tool to extract C++ classes informations about methods and attributes.  
 Idea from Sergiy Migdalskiy: https://archive.org/details/GDC2014Migdalskiy
 
