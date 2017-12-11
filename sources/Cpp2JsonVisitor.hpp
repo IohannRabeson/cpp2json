@@ -36,6 +36,8 @@ private:
     void addOrReplaceJsonMember(rapidjson::Value::Object& object, std::string const& key, rapidjson::Value &value);
 
     std::string getNormalizedTypeString(clang::QualType const qualType) const;
+
+    void parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey) const;
 private:
     std::map<std::string, std::string> m_typeNameReplacer;
     Cpp2JsonParameters const& m_parameters;

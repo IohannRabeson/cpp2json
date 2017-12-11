@@ -30,6 +30,7 @@ target_link_libraries(cpp2json PRIVATE ${LLVM_LIBS_CORE} ${CLANG_LIBS} ${Boost_L
 target_include_directories(cpp2json PUBLIC "${LLVM_INCLUDE_DIR}" "${CLANG_INCLUDE_DIRS}" "${Boost_INCLUDE_DIRS}" "${RAPIDJSON_INCLUDE_DIRS}")
 target_compile_definitions(cpp2json PRIVATE __STDC_CONSTANT_MACROS __STDC_LIMIT_MACROS RAPIDJSON_HAS_STDSTRING=1)
 target_compile_definitions(cpp2json PRIVATE LLVM_DIR="${LLVM_DIR}")
+target_compile_definitions(cpp2json PRIVATE GIT_TAG="${GIT_TAG}" GIT_BRANCH="${GIT_BRANCH}" GIT_SHORT_COMMIT="${GIT_SHORT_COMMIT}")
 
 set_property(TARGET cpp2json PROPERTY CXX_STANDARD 14)
 set_property(TARGET cpp2json PROPERTY CXX_STANDARD_REQUIRED ON)

@@ -60,6 +60,14 @@ namespace
         }
         return document[key];
     }
+
+    std::string const& getJsonBoolean(bool const value)
+    {
+        static std::string const TrueString = "true";
+        static std::string const FalseString = "false";
+
+        return value ? TrueString : FalseString;
+    }
 }
 
 Cpp2JsonVisitor::Cpp2JsonVisitor(Cpp2JsonParameters const& parameters, rapidjson::Document& jsonDocument) :
@@ -187,7 +195,7 @@ void Cpp2JsonVisitor::parseFunctionParameters(clang::FunctionDecl const* functio
         rapidjson::Value jsonParamType(getNormalizedTypeString(parameterType), m_jsonAllocator);
 
         jsonParameter.AddMember("name", jsonParamName, m_jsonAllocator);
-        jsonParameter.AddMember("type", jsonParamType, m_jsonAllocator);
+        parseType(parameterType, jsonParameter, "type");
         jsonParameterArray.PushBack(jsonParameter, m_jsonAllocator);
     }
 }
@@ -208,50 +216,58 @@ void Cpp2JsonVisitor::parseFields(clang::CXXRecordDecl *classDeclaration, rapidj
     jsonClassObject.AddMember("fields", jsonFieldArray, m_jsonAllocator);
 }
 
-void Cpp2JsonVisitor::parseField(clang::FieldDecl *fieldDeclaration, rapidjson::Value& jsonFieldArray)
+void Cpp2JsonVisitor::parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey) const
 {
-    auto const fieldName = fieldDeclaration->getNameAsString();
-    auto const fieldType = fieldDeclaration->getType().getLocalUnqualifiedType();
-    auto const fieldTypeName = getNormalizedTypeString(fieldType);
-    rapidjson::Value jsonFieldObject(rapidjson::Type::kObjectType);
+    auto const unqualifiedType = type.getLocalUnqualifiedType();
+    rapidjson::Value jsonTypeObject(rapidjson::Type::kObjectType);
 
-    jsonFieldObject.AddMember("name", fieldName, m_jsonAllocator);
-    if (fieldType->isConstantArrayType())
+    if (unqualifiedType->isConstantArrayType())
     {
-        clang::ConstantArrayType const* const constantArrayType = clang::dyn_cast_or_null<clang::ConstantArrayType const, clang::Type const>(fieldType.getTypePtr());
+        clang::ConstantArrayType const* const constantArrayType = clang::dyn_cast_or_null<clang::ConstantArrayType const, clang::Type const>(type.getTypePtr());
 
         // Only 1-dimensional arrays are supported
         // TODO: N-dimensional arrays support (require something like multiple arraySize in JSON?)
         auto const elementType = constantArrayType->getElementType();
         auto const size = constantArrayType->getSize().getLimitedValue();
 
-        jsonFieldObject.AddMember("type", getNormalizedTypeString(elementType), m_jsonAllocator);
-        jsonFieldObject.AddMember("arraySize", size, m_jsonAllocator);
+        jsonTypeObject.AddMember("key", getNormalizedTypeString(elementType), m_jsonAllocator);
+        jsonTypeObject.AddMember("arraySize", size, m_jsonAllocator);
     }
     else
     {
-        jsonFieldObject.AddMember("type", fieldTypeName, m_jsonAllocator);
+        jsonTypeObject.AddMember("key", getNormalizedTypeString(type), m_jsonAllocator);
     }
+    jsonTypeObject.AddMember("constant", getJsonBoolean(type.isLocalConstQualified()), m_jsonAllocator);
+    jsonTypeObject.AddMember("volatile", getJsonBoolean(type.isLocalVolatileQualified()), m_jsonAllocator);
+    root.AddMember(rapidjson::Value(jsonKey, m_jsonAllocator), jsonTypeObject, m_jsonAllocator);
+}
+
+
+void Cpp2JsonVisitor::parseField(clang::FieldDecl *fieldDeclaration, rapidjson::Value& jsonFieldArray)
+{
+    auto const fieldName = fieldDeclaration->getNameAsString();
+    rapidjson::Value jsonFieldObject(rapidjson::Type::kObjectType);
+
+    jsonFieldObject.AddMember("name", fieldName, m_jsonAllocator);
+    parseType(fieldDeclaration->getType(), jsonFieldObject, "type");
     jsonFieldArray.PushBack(jsonFieldObject, m_jsonAllocator);
 }
 
 void Cpp2JsonVisitor::parseBaseClasses(clang::CXXRecordDecl *classDeclaration, rapidjson::Value &jsonClassObject)
 {
-    if (classDeclaration->getNumBases() > 0u)
+    rapidjson::Value jsonBaseClassArray(rapidjson::Type::kArrayType);
+
+    for (auto baseIt = classDeclaration->bases_begin(); baseIt != classDeclaration->bases_end(); ++baseIt)
     {
-        rapidjson::Value jsonBaseClassArray(rapidjson::Type::kArrayType);
+        clang::CXXBaseSpecifier const baseSpecifier = *baseIt;
+        auto const* baseDecl = baseSpecifier.getType()->getAsCXXRecordDecl();
+        auto const baseClassName = baseDecl->getQualifiedNameAsString();
+        rapidjson::Value jsonBaseClassName(baseClassName, m_jsonAllocator);
 
-        for (auto baseIt = classDeclaration->bases_begin(); baseIt != classDeclaration->bases_end(); ++baseIt)
-        {
-            clang::CXXBaseSpecifier const baseSpecifier = *baseIt;
-            auto const* baseDecl = baseSpecifier.getType()->getAsCXXRecordDecl();
-            auto const baseClassName = baseDecl->getQualifiedNameAsString();
-            rapidjson::Value jsonBaseClassName(baseClassName, m_jsonAllocator);
-
-            jsonBaseClassArray.PushBack(jsonBaseClassName, m_jsonAllocator);
-        }
-        jsonClassObject.AddMember("bases", jsonBaseClassArray, m_jsonAllocator);
+        jsonBaseClassArray.PushBack(jsonBaseClassName, m_jsonAllocator);
     }
+    jsonClassObject.AddMember("bases", jsonBaseClassArray, m_jsonAllocator);
+
 }
 
 void Cpp2JsonVisitor::parseClassTemplateParameters(clang::CXXRecordDecl *classDeclaration, rapidjson::Value &jsonClassObject)
