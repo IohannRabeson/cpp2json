@@ -16,6 +16,7 @@
 static std::string const LlvmBasePath{LLVM_DIR};
 
 static llvm::cl::OptionCategory cpp2JsonCategory("Main options");
+
 static llvm::cl::opt<std::string> outputFile("output",
                                                    llvm::cl::init("-"),
                                                    llvm::cl::desc("Specify output JSON filename.\n"
@@ -73,7 +74,7 @@ static Cpp2JsonParameters makeParameters()
  * 'normal' location for a clang tool), we need to hardcode ourself theses
  * paths because this binary will probably not located in the right directory...
  *
- * If this executable has not been compiled by the user, it must pass as arguments
+ * If this executable has not been compiled by the user, the user himself must pass as arguments
  * the paths to the standard includes directories provided by llvm.
  */
 static clang::tooling::CommandLineArguments makeLlvmIncludeArguments()
