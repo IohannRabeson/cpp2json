@@ -166,7 +166,7 @@ void Cpp2JsonVisitor::parseMethod(clang::CXXMethodDecl const *methodDeclaration,
     parseFunctionParameters(methodDeclaration, jsonMethodParametersArray);
     jsonMethod.AddMember("name", jsonMethodName, m_jsonAllocator);
     jsonMethod.AddMember("parameters", jsonMethodParameters, m_jsonAllocator);
-    jsonMethod.AddMember("result", jsonReturnType, m_jsonAllocator);
+    parseType(returnType, jsonMethod, "resultType");
     jsonMethodArray.PushBack(jsonMethod, m_jsonAllocator);
 }
 
