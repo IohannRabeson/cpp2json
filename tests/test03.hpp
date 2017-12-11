@@ -28,6 +28,8 @@ struct __attribute__((annotate("yep"))) Test8
     const bool justForFun;
     volatile burk::YoloEnum degueu;
     mutable YalaEnum yalala;
+    int array_of_ints[123];
+    int const const_array_of_ints[123];
 
     void yep()
     {

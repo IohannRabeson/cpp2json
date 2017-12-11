@@ -68,6 +68,53 @@ namespace
 
         return value ? TrueString : FalseString;
     }
+
+    /*!
+     * \brief Returns the qualified type without array or pointer or reference informations.
+     *
+     * Example:
+     *  - int const => int const
+     *  - int [123] => int
+     *  - int const [123] => int const
+     * \param type
+     * \return
+     */
+    clang::QualType getCleanedType(clang::QualType const type)
+    {
+        auto other = type;
+
+        if (other->isPointerType())
+        {
+            other = other->getPointeeType();
+        }
+        // TODO: maybe useless? Maybe using the same code as other->isPointerType() is sufficient?
+        else if (type->isReferenceType())
+        {
+            auto const* referenceType = clang::dyn_cast<clang::ReferenceType>(type);
+
+            other = referenceType->getPointeeType();
+        }
+        else if (type->isArrayType())
+        {
+            auto const* arrayType = type->getAsArrayTypeUnsafe();
+
+            other = arrayType->getElementType();
+        }
+        return other;
+    }
+
+    std::string replaceAll(std::string const& str, std::string const& toReplace, std::string const& replacement)
+    {
+        std::string result = str;
+        auto pos = result.find(toReplace);
+
+        while (pos != std::string::npos)
+        {
+            result.replace(pos, toReplace.size(), replacement);
+            pos = result.find(toReplace, pos + replacement.size());
+        }
+        return result;
+    }
 }
 
 Cpp2JsonVisitor::Cpp2JsonVisitor(Cpp2JsonParameters const& parameters, rapidjson::Document& jsonDocument) :
@@ -126,7 +173,7 @@ void Cpp2JsonVisitor::parseEnum(clang::EnumDecl *enumDeclaration)
     rapidjson::Value jsonEnum(rapidjson::Type::kObjectType);
     rapidjson::Value jsonEnumValues(rapidjson::Type::kObjectType);
 
-    jsonEnum.AddMember("underlyingType", getNormalizedTypeString(integerTypeDeclaration), m_jsonAllocator);
+    jsonEnum.AddMember("underlying_type", getCleanedTypeString(integerTypeDeclaration), m_jsonAllocator);
     for (auto const enumerator : enumDeclaration->enumerators())
     {
         rapidjson::Value jsonEnumeratorValue(enumerator->getNameAsString(), m_jsonAllocator);
@@ -161,12 +208,11 @@ void Cpp2JsonVisitor::parseMethod(clang::CXXMethodDecl const *methodDeclaration,
     rapidjson::Value jsonMethodName(methodDeclaration->getNameAsString(), m_jsonAllocator);
     rapidjson::Value jsonMethodParameters(rapidjson::Type::kArrayType);
     rapidjson::Value::Array jsonMethodParametersArray = jsonMethodParameters.GetArray();
-    rapidjson::Value jsonReturnType(getNormalizedTypeString(returnType), m_jsonAllocator);
 
     parseFunctionParameters(methodDeclaration, jsonMethodParametersArray);
     jsonMethod.AddMember("name", jsonMethodName, m_jsonAllocator);
     jsonMethod.AddMember("parameters", jsonMethodParameters, m_jsonAllocator);
-    parseType(returnType, jsonMethod, "resultType");
+    parseType(returnType, jsonMethod, "result_type", methodDeclaration->getASTContext());
     jsonMethodArray.PushBack(jsonMethod, m_jsonAllocator);
 }
 
@@ -192,10 +238,9 @@ void Cpp2JsonVisitor::parseFunctionParameters(clang::FunctionDecl const* functio
         clang::QualType const parameterType = parameterDeclaration->getType();
         rapidjson::Value jsonParameter(rapidjson::Type::kObjectType);
         rapidjson::Value jsonParamName(parameterDeclaration->getNameAsString(), m_jsonAllocator);
-        rapidjson::Value jsonParamType(getNormalizedTypeString(parameterType), m_jsonAllocator);
 
         jsonParameter.AddMember("name", jsonParamName, m_jsonAllocator);
-        parseType(parameterType, jsonParameter, "type");
+        parseType(parameterType, jsonParameter, "paramType", functionDecl->getASTContext());
         jsonParameterArray.PushBack(jsonParameter, m_jsonAllocator);
     }
 }
@@ -216,40 +261,13 @@ void Cpp2JsonVisitor::parseFields(clang::CXXRecordDecl *classDeclaration, rapidj
     jsonClassObject.AddMember("fields", jsonFieldArray, m_jsonAllocator);
 }
 
-void Cpp2JsonVisitor::parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey) const
-{
-    auto const unqualifiedType = type.getLocalUnqualifiedType();
-    rapidjson::Value jsonTypeObject(rapidjson::Type::kObjectType);
-
-    if (unqualifiedType->isConstantArrayType())
-    {
-        clang::ConstantArrayType const* const constantArrayType = clang::dyn_cast_or_null<clang::ConstantArrayType const, clang::Type const>(type.getTypePtr());
-
-        // Only 1-dimensional arrays are supported
-        // TODO: N-dimensional arrays support (require something like multiple arraySize in JSON?)
-        auto const elementType = constantArrayType->getElementType();
-        auto const size = constantArrayType->getSize().getLimitedValue();
-
-        jsonTypeObject.AddMember("key", getNormalizedTypeString(elementType), m_jsonAllocator);
-        jsonTypeObject.AddMember("arraySize", size, m_jsonAllocator);
-    }
-    else
-    {
-        jsonTypeObject.AddMember("key", getNormalizedTypeString(type), m_jsonAllocator);
-    }
-    jsonTypeObject.AddMember("constant", getJsonBoolean(type.isLocalConstQualified()), m_jsonAllocator);
-    jsonTypeObject.AddMember("volatile", getJsonBoolean(type.isLocalVolatileQualified()), m_jsonAllocator);
-    root.AddMember(rapidjson::Value(jsonKey, m_jsonAllocator), jsonTypeObject, m_jsonAllocator);
-}
-
-
 void Cpp2JsonVisitor::parseField(clang::FieldDecl *fieldDeclaration, rapidjson::Value& jsonFieldArray)
 {
     auto const fieldName = fieldDeclaration->getNameAsString();
     rapidjson::Value jsonFieldObject(rapidjson::Type::kObjectType);
 
     jsonFieldObject.AddMember("name", fieldName, m_jsonAllocator);
-    parseType(fieldDeclaration->getType(), jsonFieldObject, "type");
+    parseType(fieldDeclaration->getType(), jsonFieldObject, "type", fieldDeclaration->getASTContext());
     jsonFieldArray.PushBack(jsonFieldObject, m_jsonAllocator);
 }
 
@@ -302,6 +320,43 @@ void Cpp2JsonVisitor::parseIncludeDeclaration(clang::Decl* declaration, rapidjso
     jsonObject.AddMember("file", fileName, m_jsonAllocator);
 }
 
+void Cpp2JsonVisitor::parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context) const
+{
+    // \var cleanedType Qualified type without array marker, or pointer, reference.
+    auto const cleanedType = getCleanedType(type);
+    rapidjson::Value jsonTypeObject(rapidjson::Type::kObjectType);
+
+    // The size array is an informatioon only available if the array is a constant array.
+    // If it is an another array type (see derived classes from clang::ArrayType) then the user
+    // should use annotations to define the array size.
+    // This should handle any possible cases (even the cases where a variable stores the array size).
+    if (type->isConstantArrayType())
+    {
+        clang::ConstantArrayType const* const constantArrayType = clang::dyn_cast_or_null<clang::ConstantArrayType const, clang::Type const>(type.getTypePtr());
+
+        // Only 1-dimensional arrays are supported
+        // TODO: N-dimensional arrays support (require something like multiple arraySize in JSON?)
+        auto const size = constantArrayType->getSize().getLimitedValue();
+
+        jsonTypeObject.AddMember("key", getCleanedTypeString(cleanedType), m_jsonAllocator);
+        jsonTypeObject.AddMember("expression", getNormalizedTypeString(type), m_jsonAllocator);
+        jsonTypeObject.AddMember("array_size", size, m_jsonAllocator);
+    }
+    else
+    {
+        jsonTypeObject.AddMember("key", getCleanedTypeString(type), m_jsonAllocator);
+        jsonTypeObject.AddMember("expression", getNormalizedTypeString(type), m_jsonAllocator);
+    }
+    jsonTypeObject.AddMember("pointer", getJsonBoolean(type->isPointerType()), m_jsonAllocator);
+    jsonTypeObject.AddMember("array", getJsonBoolean(type->isArrayType()), m_jsonAllocator);
+    jsonTypeObject.AddMember("reference", getJsonBoolean(type->isReferenceType()), m_jsonAllocator);
+    jsonTypeObject.AddMember("const", getJsonBoolean(cleanedType.isLocalConstQualified()), m_jsonAllocator);
+    jsonTypeObject.AddMember("volatile", getJsonBoolean(type.isVolatileQualified()), m_jsonAllocator);
+    jsonTypeObject.AddMember("literal", getJsonBoolean(cleanedType->isLiteralType(context)), m_jsonAllocator);
+    jsonTypeObject.AddMember("enum", getJsonBoolean(cleanedType->isEnumeralType()), m_jsonAllocator);
+    root.AddMember(rapidjson::Value(jsonKey, m_jsonAllocator), jsonTypeObject, m_jsonAllocator);
+}
+
 bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXRecordDecl const* declaration) const
 {
     return (!isInMainFile(declaration) || hasExcludeAnnotation(declaration));
@@ -339,14 +394,51 @@ void Cpp2JsonVisitor::addOrReplaceJsonMember(rapidjson::Value::Object &object, c
     object.AddMember(rapidjson::Value(key, m_jsonAllocator), value, m_jsonAllocator);
 }
 
-std::string Cpp2JsonVisitor::getNormalizedTypeString(const clang::QualType qualType) const
+std::string Cpp2JsonVisitor::getCleanedTypeString(const clang::QualType &type) const
+{
+    auto const effectiveType = getCleanedType(type).getUnqualifiedType();
+    std::string typeName = getNormalizedTypeString(effectiveType);
+
+    return typeName;
+}
+
+std::string Cpp2JsonVisitor::replaceTypeNames(std::string typeName) const
+{
+    for (auto const& replacement : m_typeNameReplacer)
+    {
+        typeName = replaceAll(typeName, replacement.first, replacement.second);
+    }
+    return typeName;
+}
+
+std::string Cpp2JsonVisitor::removeClassStructEnum(std::string typeName) const
+{
+    static std::vector<std::string> const KeywordToRemove =
+    {
+        "class ",
+        "struct ",
+        "enum "
+    };
+
+    for (auto const& toRemove : KeywordToRemove)
+    {
+        // TODO: extract this code => function std::string removeAll(std::string, std::string)
+        auto pos = typeName.find(toRemove);
+
+        while (pos != std::string::npos)
+        {
+            typeName.erase(pos, toRemove.size());
+            pos = typeName.find(toRemove);
+        }
+    }
+    return typeName;
+}
+
+std::string Cpp2JsonVisitor::getNormalizedTypeString(const clang::QualType& qualType) const
 {
     std::string nameAsString = qualType.getAsString();
-    auto it = m_typeNameReplacer.find(nameAsString);
 
-    if (it != m_typeNameReplacer.end())
-    {
-        nameAsString = it->second;
-    }
+    nameAsString = removeClassStructEnum(nameAsString);
+    nameAsString = replaceTypeNames(nameAsString);
     return nameAsString;
 }
