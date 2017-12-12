@@ -2,7 +2,7 @@ find_package(LLVM REQUIRED)
 find_package(Clang REQUIRED)
 find_package(RapidJSON REQUIRED)
 
-set(SOURCES
+set(BACKEND_SOURCES
     Cpp2JsonVisitor.hpp
     Cpp2JsonVisitor.cpp
     Cpp2JsonAction.hpp
@@ -10,8 +10,13 @@ set(SOURCES
     Cpp2JsonActionFactory.hpp
     Cpp2JsonActionFactory.cpp
     Cpp2JsonParameters.hpp
+)
+
+set(SOURCES
+    ${BACKEND_SOURCES}
     JsonOutputWriter.hpp
     JsonOutputWriter.cpp
+
     main.cpp
     ../README.md
 )
@@ -35,3 +40,4 @@ target_compile_definitions(cpp2json PRIVATE GIT_TAG="${GIT_TAG}" GIT_BRANCH="${G
 set_property(TARGET cpp2json PROPERTY CXX_STANDARD 14)
 set_property(TARGET cpp2json PROPERTY CXX_STANDARD_REQUIRED ON)
 
+add_subdirectory(tests)

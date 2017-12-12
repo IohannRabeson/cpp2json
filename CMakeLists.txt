@@ -13,5 +13,6 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/GitInfo.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/PrependList.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/CreateTest.cmake")
 
+add_subdirectory(external)
 add_subdirectory(sources)
 
