@@ -8,6 +8,8 @@
 #include <Cpp2JsonActionFactory.hpp>
 #include <JsonOutputWriter.hpp>
 
+#include "../JsonOutputWriter.hpp"
+
 static std::string const LlvmBasePath{LLVM_DIR};
 
 static clang::tooling::CommandLineArguments makeLlvmIncludeArguments()
@@ -46,12 +48,12 @@ rapidjson::Value::ConstObject Cpp2JsonVisitorFixture::getClasses() const
 
 rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getFieldsOf(const std::string &className) const
 {
-    rapidjson::Value::ConstObject classes = getClasses();
+    rapidjson::Value::ConstObject classes = m_document["classes"].GetObject();
 
     if (!classes.HasMember(className.c_str()))
         ADD_FAILURE() << "Unable to find class '" << className << "'";
 
-    rapidjson::Value::ConstObject members = classes["TestTypeQualifier"].GetObject();
+    rapidjson::Value::ConstObject members = classes[className.c_str()].GetObject();
 
     if (!members.HasMember("fields"))
         ADD_FAILURE() << "Unable to find 'fields' member in class '" << className << "'";
@@ -59,7 +61,7 @@ rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getFieldsOf(const std::stri
     return members["fields"].GetArray();
 }
 
-void Cpp2JsonVisitorFixture::parseCpp(const std::string &path)
+void Cpp2JsonVisitorFixture::parseCpp(const std::string &path, bool const logJson)
 {
     static llvm::cl::OptionCategory cpp2JsonCategory("Main options");
     std::vector<char const*> argv{"", path.c_str(), "--", "-std=c++14"};
@@ -74,6 +76,61 @@ void Cpp2JsonVisitorFixture::parseCpp(const std::string &path)
     tool.appendArgumentsAdjuster(extra);
 
     auto const frontEndActionFactory = newCpp2JsonActionFactory(parameters, m_document);
+    auto const result = tool.run(frontEndActionFactory.get());
 
-    ASSERT_EQ (tool.run(frontEndActionFactory.get()), 0);
+    ASSERT_EQ (result, 0);
+
+    if (result == 0 && logJson)
+    {
+        JsonOutputWriter const writer(parameters);
+
+        writer.write(m_document);
+    }
+}
+
+bool testFieldInfo(const rapidjson::Value::ConstArray &fields, const std::string &fieldName, const std::string &fieldQualifier, const bool expected, bool &fieldFound)
+{
+    bool result = false;
+
+    fieldFound = false;
+    for (auto it = fields.Begin(); it != fields.End(); ++it)
+    {
+        auto const field = it->GetObject();
+
+        if (field["name"].GetString() == fieldName)
+        {
+            auto const qualifiers = field["type"].GetObject();
+
+            result = (qualifiers[fieldQualifier.c_str()].GetBool() == expected);
+            fieldFound = true;
+            break;
+        }
+    }
+    return result;
+}
+
+testing::AssertionResult assertFieldHaveQualifier(const char *fieldsExpression, const char *fieldNameExpression,
+                                                  const char *fieldQualifierExpression, const char *expectQualifierExpression,
+                                                  const rapidjson::Value::ConstArray &fields, const std::string &fieldName,
+                                                  const std::string &fieldQualifier, const bool expected)
+{
+    bool fieldFound = false;
+
+    if (testFieldInfo(fields, fieldName, fieldQualifier, expected, fieldFound))
+    {
+        return ::testing::AssertionSuccess();
+    }
+
+    if (!fieldFound)
+    {
+        return ::testing::AssertionFailure() << "'" << fieldName << "' not found";
+    }
+    if (expected)
+    {
+        return ::testing::AssertionFailure() << "Field '" << fieldName << "' is not " << fieldQualifier;
+    }
+    else
+    {
+        return ::testing::AssertionFailure() << "Field '" << fieldName << "' is " << fieldQualifier;
+    }
 }
