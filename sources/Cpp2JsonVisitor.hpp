@@ -17,7 +17,6 @@ public:
 private:
     void parseClass(clang::CXXRecordDecl *classDeclaration);
     void parseEnum(clang::EnumDecl* enumDeclaration);
-
     void parseAnnotations(clang::Decl const* classDeclaration, rapidjson::Value& jsonClassObject);
     void parseMethod(clang::CXXMethodDecl const* methodDeclaration, rapidjson::Value::Array& jsonMethodArray);
     void parseMethods(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
@@ -27,6 +26,7 @@ private:
     void parseBaseClasses(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
     void parseClassTemplateParameters(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
     void parseIncludeDeclaration(clang::Decl* declaration, rapidjson::Value& jsonObject);
+    void parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context) const;
 
     bool isExcludedDeclaration(clang::CXXRecordDecl const* declaration)const;
     bool isExcludedDeclaration(clang::EnumDecl const* declaration)const;
@@ -35,7 +35,10 @@ private:
 
     void addOrReplaceJsonMember(rapidjson::Value::Object& object, std::string const& key, rapidjson::Value &value);
 
-    std::string getNormalizedTypeString(clang::QualType const qualType) const;
+    std::string getNormalizedTypeString(clang::QualType const& qualType) const;
+    std::string getCleanedTypeString(clang::QualType const& qualType) const;
+    std::string replaceTypeNames(std::string typeName) const;
+    std::string removeClassStructEnum(std::string typeName) const;
 private:
     std::map<std::string, std::string> m_typeNameReplacer;
     Cpp2JsonParameters const& m_parameters;

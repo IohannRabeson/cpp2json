@@ -2,7 +2,19 @@ find_package(LLVM REQUIRED)
 find_package(Clang REQUIRED)
 find_package(RapidJSON REQUIRED)
 
+set(BACKEND_SOURCES
+    Cpp2JsonVisitor.hpp
+    Cpp2JsonVisitor.cpp
+    Cpp2JsonAction.hpp
+    Cpp2JsonAction.cpp
+    Cpp2JsonActionFactory.hpp
+    Cpp2JsonActionFactory.cpp
+    Cpp2JsonParameters.hpp
+)
+
 set(SOURCES
+    JsonOutputWriter.hpp
+    JsonOutputWriter.cpp
     main.cpp
     ../README.md
 )
@@ -14,19 +26,12 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/output)
 
 add_executable(cpp2json ${SOURCES})
 
-add_library(cpp2json-core
-            Cpp2JsonVisitor.hpp
-            Cpp2JsonVisitor.cpp
-            Cpp2JsonAction.hpp
-            Cpp2JsonAction.cpp
-            Cpp2JsonActionFactory.hpp
-            Cpp2JsonActionFactory.cpp
-            Cpp2JsonParameters.hpp
-            JsonOutputWriter.hpp
-            JsonOutputWriter.cpp)
+add_library(cpp2json-core ${BACKEND_SOURCES})
 
 get_filename_component(LLVM_DIR ${LLVM_INCLUDE_DIR} DIRECTORY)
 
+
+set_target_properties(cpp2json PROPERTIES COMPILE_FLAGS ${LLVM_COMPILE_FLAGS})
 target_link_libraries(cpp2json PRIVATE cpp2json-core)
 target_compile_definitions(cpp2json PRIVATE LLVM_DIR="${LLVM_DIR}")
 target_compile_definitions(cpp2json PRIVATE __STDC_CONSTANT_MACROS __STDC_LIMIT_MACROS RAPIDJSON_HAS_STDSTRING=1)
@@ -39,3 +44,4 @@ target_compile_definitions(cpp2json-core PRIVATE __STDC_CONSTANT_MACROS __STDC_L
 set_property(TARGET cpp2json PROPERTY CXX_STANDARD 14)
 set_property(TARGET cpp2json PROPERTY CXX_STANDARD_REQUIRED ON)
 
+add_subdirectory(tests)
