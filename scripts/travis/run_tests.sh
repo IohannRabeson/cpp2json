@@ -11,5 +11,5 @@ fi
 BUILD_DIR_NAME="$1"
 
 cd $BUILD_DIR_NAME
-ctest --output-on-failure
+./output/unit_tests
 cd -
