@@ -87,7 +87,7 @@ namespace
         {
             other = other->getPointeeType();
         }
-        // TODO: maybe useless? Maybe using the same code as other->isPointerType() is sufficient?
+        // TODO: maybe useless? Is using the same code as other->isPointerType() sufficient?
         else if (type->isReferenceType())
         {
             auto const* referenceType = clang::dyn_cast<clang::ReferenceType>(type);
@@ -285,7 +285,6 @@ void Cpp2JsonVisitor::parseBaseClasses(clang::CXXRecordDecl *classDeclaration, r
         jsonBaseClassArray.PushBack(jsonBaseClassName, m_jsonAllocator);
     }
     jsonClassObject.AddMember("bases", jsonBaseClassArray, m_jsonAllocator);
-
 }
 
 void Cpp2JsonVisitor::parseClassTemplateParameters(clang::CXXRecordDecl *classDeclaration, rapidjson::Value &jsonClassObject)
