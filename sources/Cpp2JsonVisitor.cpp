@@ -61,14 +61,6 @@ namespace
         return document[key];
     }
 
-    std::string const& getJsonBoolean(bool const value)
-    {
-        static std::string const TrueString = "true";
-        static std::string const FalseString = "false";
-
-        return value ? TrueString : FalseString;
-    }
-
     /*!
      * \brief Returns the qualified type without array or pointer or reference informations.
      *
@@ -346,13 +338,13 @@ void Cpp2JsonVisitor::parseType(clang::QualType const& type, rapidjson::Value& r
         jsonTypeObject.AddMember("key", getCleanedTypeString(type), m_jsonAllocator);
         jsonTypeObject.AddMember("expression", getNormalizedTypeString(type), m_jsonAllocator);
     }
-    jsonTypeObject.AddMember("pointer", getJsonBoolean(type->isPointerType()), m_jsonAllocator);
-    jsonTypeObject.AddMember("array", getJsonBoolean(type->isArrayType()), m_jsonAllocator);
-    jsonTypeObject.AddMember("reference", getJsonBoolean(type->isReferenceType()), m_jsonAllocator);
-    jsonTypeObject.AddMember("const", getJsonBoolean(cleanedType.isLocalConstQualified()), m_jsonAllocator);
-    jsonTypeObject.AddMember("volatile", getJsonBoolean(type.isVolatileQualified()), m_jsonAllocator);
-    jsonTypeObject.AddMember("literal", getJsonBoolean(cleanedType->isLiteralType(context)), m_jsonAllocator);
-    jsonTypeObject.AddMember("enum", getJsonBoolean(cleanedType->isEnumeralType()), m_jsonAllocator);
+    jsonTypeObject.AddMember("pointer", type->isPointerType(), m_jsonAllocator);
+    jsonTypeObject.AddMember("array", type->isArrayType(), m_jsonAllocator);
+    jsonTypeObject.AddMember("reference", type->isReferenceType(), m_jsonAllocator);
+    jsonTypeObject.AddMember("const", cleanedType.isLocalConstQualified(), m_jsonAllocator);
+    jsonTypeObject.AddMember("volatile", type.isVolatileQualified(), m_jsonAllocator);
+    jsonTypeObject.AddMember("literal", cleanedType->isLiteralType(context), m_jsonAllocator);
+    jsonTypeObject.AddMember("enum", cleanedType->isEnumeralType(), m_jsonAllocator);
     root.AddMember(rapidjson::Value(jsonKey, m_jsonAllocator), jsonTypeObject, m_jsonAllocator);
 }
 
