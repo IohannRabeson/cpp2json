@@ -10,6 +10,7 @@ set(SRC
     gtest.cpp
 )
 
+
 add_executable(unit_tests ${SRC})
 set_target_properties(unit_tests PROPERTIES COMPILE_FLAGS -fvisibility-inlines-hidden)
 target_compile_definitions(unit_tests PRIVATE LLVM_DIR="${LLVM_DIR}" RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/resources")
