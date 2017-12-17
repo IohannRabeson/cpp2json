@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "Cpp2JsonVisitorFixture.hpp"
+#include <Cpp2Json.hpp>
 
 TEST_F(Cpp2JsonVisitorFixture, SimpleFieldsSimpleQualifiers)
 {
@@ -101,4 +102,15 @@ TEST_F(Cpp2JsonVisitorFixture, PointerReferenceConstantQualifiers)
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "raw_const_pointer", "reference", false);
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "raw_const_pointer", "literal", true);
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "raw_const_pointer", "enum", false);
+}
+
+TEST_F(Cpp2JsonVisitorFixture, FieldAndMethodExclusion)
+{
+    parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
+
+    rapidjson::Value::ConstArray fields = getFieldsOf("FieldAndMethodExclusion");
+    rapidjson::Value::ConstArray methods = getMethodsOf("FieldAndMethodExclusion");
+
+    EXPECT_EQ( fields.Size(), 0 );
+    EXPECT_EQ( methods.Size(), 0 );
 }

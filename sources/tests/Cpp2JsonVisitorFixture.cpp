@@ -48,10 +48,25 @@ rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getFieldsOf(const std::stri
     return members["fields"].GetArray();
 }
 
+rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getMethodsOf(const std::string &className) const
+{
+    rapidjson::Value::ConstObject classes = m_document["classes"].GetObject();
+
+    if (!classes.HasMember(className.c_str()))
+        ADD_FAILURE() << "Unable to find class '" << className << "'";
+
+    rapidjson::Value::ConstObject members = classes[className.c_str()].GetObject();
+
+    if (!members.HasMember("methods"))
+        ADD_FAILURE() << "Unable to find 'methods' member in class '" << className << "'";
+
+    return members["methods"].GetArray();
+}
+
 void Cpp2JsonVisitorFixture::parseCpp(const std::string &path, bool const logJson)
 {
     static llvm::cl::OptionCategory cpp2JsonCategory("Main options");
-    std::vector<char const*> argv{"", path.c_str(), "--", "-std=c++14"};
+    std::vector<char const*> argv{"", path.c_str(), "--", CPP2JSON_SHARED_HEADER, "-std=c++14"};
     int argc = static_cast<int>(argv.size()) - 1;
 
     clang::tooling::CommonOptionsParser optionParser(argc, argv.data(), cpp2JsonCategory);

@@ -12,6 +12,7 @@
 
 #if!defined TEST_TYPE_QUALIFIER_HPP
 #define TEST_TYPE_QUALIFIER_HPP
+#include <Cpp2Json.hpp>
 
 struct SimpleFieldsSimpleQualifiers
 {
@@ -28,9 +29,14 @@ struct SimpleFieldsSimpleQualifiers
 
 struct PointerReferenceConstantQualifiers
 {
-    int raw;
     int* const raw_pointer_const;
     int const* raw_const_pointer;
+};
+
+struct FieldAndMethodExclusion
+{
+    CPP2JSON_EXCLUDE int variable;
+    CPP2JSON_EXCLUDE void method(){}
 };
 
 #endif

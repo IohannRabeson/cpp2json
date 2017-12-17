@@ -14,6 +14,7 @@ protected:
     rapidjson::Value::ConstObject getEnums() const;
     rapidjson::Value::ConstObject getClasses() const;
     rapidjson::Value::ConstArray getFieldsOf(std::string const& className) const;
+    rapidjson::Value::ConstArray getMethodsOf(std::string const& className) const;
 private:
     rapidjson::Document m_document;
 };
