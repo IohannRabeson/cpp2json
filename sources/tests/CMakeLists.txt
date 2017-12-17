@@ -3,13 +3,16 @@ set(GTEST_INCLUDE_DIR "${PROJECT_SOURCE_DIR}/dependencies/googletest/googletest/
 set(SRC
     Cpp2JsonVisitorFixture.hpp
     Cpp2JsonVisitorFixture.cpp
+    Cpp2JsonVisitorTest.cpp
+
+    ../JsonOutputWriter.hpp
+    ../JsonOutputWriter.cpp
     gtest.cpp
 )
 
-enable_testing()
 
 add_executable(unit_tests ${SRC})
-set_target_properties(unit_tests PROPERTIES COMPILE_FLAGS ${LLVM_COMPILE_FLAGS})
+set_target_properties(unit_tests PROPERTIES COMPILE_FLAGS -fvisibility-inlines-hidden)
 target_compile_definitions(unit_tests PRIVATE LLVM_DIR="${LLVM_DIR}" RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/resources")
 target_link_libraries(unit_tests PRIVATE cpp2json-core gtest gmock)
 target_include_directories(unit_tests PRIVATE "${GTEST_INCLUDE_DIR}")

@@ -13,7 +13,7 @@
 #if!defined TEST_TYPE_QUALIFIER_HPP
 #define TEST_TYPE_QUALIFIER_HPP
 
-struct TestTypeQualifier
+struct SimpleFieldsSimpleQualifiers
 {
     int raw;
     int* raw_pointer;
@@ -23,6 +23,14 @@ struct TestTypeQualifier
     int const& const_reference;
     int volatile volatile_raw;
     int const volatile const_volatile_raw;
+    int array_raw[123];
+};
+
+struct PointerReferenceConstantQualifiers
+{
+    int raw;
+    int* const raw_pointer_const;
+    int const* raw_const_pointer;
 };
 
 #endif
