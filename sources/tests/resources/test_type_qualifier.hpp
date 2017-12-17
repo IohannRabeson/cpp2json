@@ -24,7 +24,6 @@ struct SimpleFieldsSimpleQualifiers
     int const& const_reference;
     int volatile volatile_raw;
     int const volatile const_volatile_raw;
-    int array_raw[123];
 };
 
 struct PointerReferenceConstantQualifiers
@@ -37,6 +36,14 @@ struct FieldAndMethodExclusion
 {
     CPP2JSON_EXCLUDE int variable;
     CPP2JSON_EXCLUDE void method(){}
+};
+
+struct ConstantArray
+{
+    int array_raw[123];
+    int* array_pointer[234];
+    int const* array_const_pointer[345];
+    int* const array_pointer_const[456];
 };
 
 #endif

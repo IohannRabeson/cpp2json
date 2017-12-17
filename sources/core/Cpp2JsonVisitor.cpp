@@ -311,38 +311,37 @@ void Cpp2JsonVisitor::parseIncludeDeclaration(clang::Decl* declaration, rapidjso
     jsonObject.AddMember("file", fileName, m_jsonAllocator);
 }
 
-void Cpp2JsonVisitor::parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context) const
+void Cpp2JsonVisitor::parseType(clang::QualType const& completeType, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context) const
 {
-    // \var cleanedType Qualified type without array marker, or pointer, reference.
-    auto const cleanedType = getCleanedType(type);
+    clang::QualType effectiveType = completeType;
     rapidjson::Value jsonTypeObject(rapidjson::Type::kObjectType);
 
-    // The size array is an informatioon only available if the array is a constant array.
-    // If it is an another array type (see derived classes from clang::ArrayType) then the user
-    // should use annotations to define the array size.
-    // This should handle any possible cases (even the cases where a variable stores the array size).
-    if (type->isConstantArrayType())
+    if (effectiveType->isConstantArrayType())
     {
-        clang::ConstantArrayType const* const constantArrayType = clang::dyn_cast_or_null<clang::ConstantArrayType const, clang::Type const>(type.getTypePtr());
-
+        // The size array is an information only available if the array is a constant array.
+        // If it is an another array type (see derived classes from clang::ArrayType) then the user
+        // should use annotations to define the array size.
+        // This should handle any possible cases (even the cases where a variable stores the array size).
+        clang::ConstantArrayType const* const constantArrayType = clang::dyn_cast_or_null<clang::ConstantArrayType const, clang::Type const>(completeType.getTypePtr());
         // Only 1-dimensional arrays are supported
         // TODO: N-dimensional arrays support (require something like multiple arraySize in JSON?)
+        // TODO: std::optional should be usefull here: if type is not an array, then size should be undefined.
         auto const size = constantArrayType->getSize().getLimitedValue();
 
-        jsonTypeObject.AddMember("key", getCleanedTypeString(cleanedType), m_jsonAllocator);
-        jsonTypeObject.AddMember("expression", getNormalizedTypeString(type), m_jsonAllocator);
+        effectiveType = constantArrayType->getElementType();
         jsonTypeObject.AddMember("array_size", size, m_jsonAllocator);
     }
-    else
-    {
-        jsonTypeObject.AddMember("key", getCleanedTypeString(type), m_jsonAllocator);
-        jsonTypeObject.AddMember("expression", getNormalizedTypeString(type), m_jsonAllocator);
-    }
-    jsonTypeObject.AddMember("pointer", type->isPointerType(), m_jsonAllocator);
-    jsonTypeObject.AddMember("array", type->isArrayType(), m_jsonAllocator);
-    jsonTypeObject.AddMember("reference", type->isReferenceType(), m_jsonAllocator);
+
+    // \var cleanedType Qualified type without any array marker, or pointer or reference.
+    clang::QualType const cleanedType = getCleanedType(effectiveType);
+
+    jsonTypeObject.AddMember("key", getCleanedTypeString(effectiveType), m_jsonAllocator);
+    jsonTypeObject.AddMember("expression", getNormalizedTypeString(effectiveType), m_jsonAllocator);
+    jsonTypeObject.AddMember("pointer", effectiveType->isPointerType(), m_jsonAllocator);
+    jsonTypeObject.AddMember("array", completeType->isArrayType(), m_jsonAllocator);
+    jsonTypeObject.AddMember("reference", effectiveType->isReferenceType(), m_jsonAllocator);
     jsonTypeObject.AddMember("const", cleanedType.isLocalConstQualified(), m_jsonAllocator);
-    jsonTypeObject.AddMember("volatile", type.isVolatileQualified(), m_jsonAllocator);
+    jsonTypeObject.AddMember("volatile", effectiveType.isVolatileQualified(), m_jsonAllocator);
     jsonTypeObject.AddMember("literal", cleanedType->isLiteralType(context), m_jsonAllocator);
     jsonTypeObject.AddMember("enum", cleanedType->isEnumeralType(), m_jsonAllocator);
     root.AddMember(rapidjson::Value(jsonKey, m_jsonAllocator), jsonTypeObject, m_jsonAllocator);
