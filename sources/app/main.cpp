@@ -2,7 +2,8 @@
 #include <clang/Tooling/CommonOptionsParser.h>
 #include <clang/Frontend/TextDiagnosticPrinter.h>
 
-#include "Cpp2JsonActionFactory.hpp"
+#include <CommandLineHelpers.hpp>
+#include <Cpp2JsonActionFactory.hpp>
 #include "Cpp2JsonParameters.hpp"
 #include "JsonOutputWriter.hpp"
 #include <rapidjson/istreamwrapper.h>
@@ -13,7 +14,6 @@
 #include <fstream>
 #include <iostream>
 
-static std::string const LlvmBasePath{LLVM_DIR};
 
 static llvm::cl::OptionCategory cpp2JsonCategory("Main options");
 
@@ -64,26 +64,6 @@ static Cpp2JsonParameters makeParameters()
     parameters.appendOutput = appendOutput.getValue();
     parameters.excludeAnnotationContent = excludeAnnotation.getValue();
     return parameters;
-}
-
-/*!
- * \brief Make extras arguments.
- *
- * Since clang driver hardcode the standard includes directories path
- * using the location of the binary (assuming the binary is located in the
- * 'normal' location for a clang tool), we need to hardcode ourself theses
- * paths because this binary will probably not located in the right directory...
- *
- * If this executable has not been compiled by the user, the user himself must pass as arguments
- * the paths to the standard includes directories provided by llvm.
- */
-static clang::tooling::CommandLineArguments makeLlvmIncludeArguments()
-{
-    std::string const llvmVersion = LlvmBasePath.substr(LlvmBasePath.find_last_of('/'));
-    clang::tooling::CommandLineArguments extraArguments{"-I" + LlvmBasePath + "/include/c++/v1",
-                                                        "-I" + LlvmBasePath + "/lib/clang/" + llvmVersion + "/include"};
-
-    return extraArguments;
 }
 
 int main(int argc, char const** argv)

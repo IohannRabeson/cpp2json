@@ -7,20 +7,7 @@
 #include <Cpp2JsonParameters.hpp>
 #include <Cpp2JsonActionFactory.hpp>
 #include <JsonOutputWriter.hpp>
-
-#include "../JsonOutputWriter.hpp"
-
-static std::string const LlvmBasePath{LLVM_DIR};
-
-static clang::tooling::CommandLineArguments makeLlvmIncludeArguments()
-{
-    std::string const llvmVersion = LlvmBasePath.substr(LlvmBasePath.find_last_of('/'));
-    clang::tooling::CommandLineArguments extraArguments{"-I" + LlvmBasePath + "/include/c++/v1",
-                                                        "-I" + LlvmBasePath + "/lib/clang/" + llvmVersion + "/include"};
-
-    extraArguments.push_back("-std=c++14");
-    return extraArguments;
-}
+#include <CommandLineHelpers.hpp>
 
 static Cpp2JsonParameters makeParameters()
 {
