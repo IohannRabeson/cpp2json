@@ -96,7 +96,7 @@ TEST_F(Cpp2JsonVisitorFixture, PointerReferenceConstantQualifiers)
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "raw_const_pointer", "enum", false);
 }
 
-TEST_F(Cpp2JsonVisitorFixture, ConstantOneDimensionalArray)
+TEST_F(Cpp2JsonVisitorFixture, ConstantOneDimensionalArrayTypeQualifiers)
 {
     parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
 
@@ -135,13 +135,17 @@ TEST_F(Cpp2JsonVisitorFixture, ConstantOneDimensionalArray)
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer_const", "enum", false);
 }
 
-TEST_F(Cpp2JsonVisitorFixture, FieldAndMethodExclusion)
+TEST_F(Cpp2JsonVisitorFixture, ExcludedThings)
 {
     parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
 
     rapidjson::Value::ConstArray fields = getFieldsOf("FieldAndMethodExclusion");
     rapidjson::Value::ConstArray methods = getMethodsOf("FieldAndMethodExclusion");
+    rapidjson::Value::ConstObject classes = getClasses();
 
     EXPECT_EQ( fields.Size(), 0 );
     EXPECT_EQ( methods.Size(), 0 );
+    // Since ExcludedClass is declared with annotation CPP2JSON_EXCLUDE
+    // it don't be referenced in container 'classes'.
+    EXPECT_TRUE( classes.FindMember("ExcludedClass") == classes.end() );
 }

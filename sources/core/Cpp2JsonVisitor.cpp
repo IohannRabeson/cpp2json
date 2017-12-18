@@ -370,7 +370,7 @@ bool Cpp2JsonVisitor::isExcludedDeclaration(clang::EnumDecl const* declaration) 
 
 bool Cpp2JsonVisitor::hasExcludeAnnotation(clang::Decl const* declaration) const
 {
-    return hasAnnotation(declaration, m_parameters.excludeAnnotationContent);
+    return hasAnnotation(declaration, m_parameters.excludeAnnotationContent) || hasAnnotation(declaration, ExclusionAnnotationTag);
 }
 
 void Cpp2JsonVisitor::addOrReplaceJsonMember(rapidjson::Value::Object &object, const std::string &key, rapidjson::Value& value)

@@ -12,6 +12,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/CreateOption.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/GitInfo.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/PrependList.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/CreateTest.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/Cpp2JsonPrivateDefinition.cmake")
 
 add_subdirectory(external)
 

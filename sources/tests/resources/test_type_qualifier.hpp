@@ -38,6 +38,10 @@ struct FieldAndMethodExclusion
     CPP2JSON_EXCLUDE void method(){}
 };
 
+struct CPP2JSON_EXCLUDE ExcludedClass
+{
+};
+
 struct ConstantArray
 {
     int array_raw[123];

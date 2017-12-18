@@ -7,6 +7,8 @@ struct Cpp2JsonParameters;
 
 class Cpp2JsonVisitor : public clang::RecursiveASTVisitor<Cpp2JsonVisitor>
 {
+    static constexpr char const* const ExclusionAnnotationTag = "cpp2json_exclude";
+
 public:
     explicit Cpp2JsonVisitor(Cpp2JsonParameters const& parameters, rapidjson::Document& jsonDocument);
 
