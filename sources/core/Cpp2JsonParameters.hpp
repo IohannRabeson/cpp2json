@@ -1,5 +1,5 @@
-#ifndef CPP2JSONPARAMETERS_HPP
-#define CPP2JSONPARAMETERS_HPP
+#ifndef CPP2JSON_PARAMETERS_HPP
+#define CPP2JSON_PARAMETERS_HPP
 
 #include <string>
 
@@ -17,4 +17,4 @@ struct Cpp2JsonParameters
     bool appendOutput;
 };
 
-#endif // CPP2JSONPARAMETERS_HPP
+#endif // CPP2JSON_PARAMETERS_HPP

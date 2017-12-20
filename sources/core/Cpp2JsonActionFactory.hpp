@@ -1,5 +1,5 @@
-#ifndef CPP2JSONACTIONFACTORY_HPP
-#define CPP2JSONACTIONFACTORY_HPP
+#ifndef CPP2JSON_ACTION_FACTORY_HPP
+#define CPP2JSON_ACTION_FACTORY_HPP
 #include <clang/Tooling/Tooling.h>
 #include <rapidjson/document.h>
 
@@ -18,4 +18,4 @@ private:
 
 std::unique_ptr<Cpp2JsonActionFactory> newCpp2JsonActionFactory(Cpp2JsonParameters const& parameters, rapidjson::Document& document);
 
-#endif // CPP2JSONACTIONFACTORY_HPP
+#endif // CPP2JSON_ACTION_FACTORY_HPP

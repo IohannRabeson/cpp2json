@@ -1,5 +1,5 @@
-#ifndef CPP2JSONACTION_HPP
-#define CPP2JSONACTION_HPP
+#ifndef CPP2JSON_ACTION_HPP
+#define CPP2JSON_ACTION_HPP
 #include <clang/Frontend/FrontendAction.h>
 #include <clang/Tooling/Tooling.h>
 #include <rapidjson/document.h>
@@ -17,4 +17,4 @@ private:
     rapidjson::Document& m_jsonDocument;
 };
 
-#endif // CPP2JSONACTION_HPP
+#endif // CPP2JSON_ACTION_HPP

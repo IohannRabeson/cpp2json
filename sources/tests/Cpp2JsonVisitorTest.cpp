@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 #include "Cpp2JsonVisitorFixture.hpp"
+#include <Cpp2Json.hpp>
 
 TEST_F(Cpp2JsonVisitorFixture, SimpleFieldsSimpleQualifiers)
 {
@@ -70,14 +71,6 @@ TEST_F(Cpp2JsonVisitorFixture, SimpleFieldsSimpleQualifiers)
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "const_volatile_raw", "reference", false);
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "const_volatile_raw", "literal", true);
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "const_volatile_raw", "enum", false);
-
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "const", false);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "volatile", false);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "array", true);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "pointer", false);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "reference", false);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "literal", true);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "enum", false);
 }
 
 TEST_F(Cpp2JsonVisitorFixture, PointerReferenceConstantQualifiers)
@@ -101,4 +94,83 @@ TEST_F(Cpp2JsonVisitorFixture, PointerReferenceConstantQualifiers)
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "raw_const_pointer", "reference", false);
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "raw_const_pointer", "literal", true);
     EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "raw_const_pointer", "enum", false);
+}
+
+TEST_F(Cpp2JsonVisitorFixture, ConstantOneDimensionalArrayTypeQualifiers)
+{
+    parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
+
+    rapidjson::Value::ConstArray fields = getFieldsOf("ConstantArray");
+
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "const", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "volatile", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "array", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "pointer", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "reference", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "literal", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "enum", false);
+
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer", "const", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer", "volatile", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer", "array", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer", "pointer", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer", "reference", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer", "literal", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer", "enum", false);
+
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_const_pointer", "const", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_const_pointer", "volatile", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_const_pointer", "array", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_const_pointer", "pointer", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_const_pointer", "reference", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_const_pointer", "literal", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_const_pointer", "enum", false);
+
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer_const", "const", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer_const", "volatile", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer_const", "array", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer_const", "pointer", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer_const", "reference", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer_const", "literal", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_pointer_const", "enum", false);
+}
+
+TEST_F(Cpp2JsonVisitorFixture, ExcludedThings)
+{
+    parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
+
+    rapidjson::Value::ConstArray fields = getFieldsOf("FieldAndMethodExclusion");
+    rapidjson::Value::ConstArray methods = getMethodsOf("FieldAndMethodExclusion");
+    rapidjson::Value::ConstObject classes = getClasses();
+
+    EXPECT_EQ( fields.Size(), 0 );
+    EXPECT_EQ( methods.Size(), 0 );
+    // Since ExcludedClass is declared with annotation CPP2JSON_EXCLUDE
+    // it don't be referenced in container 'classes'.
+    EXPECT_TRUE( classes.FindMember("ExcludedClass") == classes.end() );
+}
+
+TEST_F(Cpp2JsonVisitorFixture, ConstantArray)
+{
+    parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
+
+    rapidjson::Value::ConstObject arrayRaw = getField("ConstantArray", "array_raw");
+
+    ASSERT_TRUE( arrayRaw.HasMember("array_size") );
+    ASSERT_EQ( arrayRaw["array_size"].GetString(), "123" );
+}
+
+TEST_F(Cpp2JsonVisitorFixture, DynamicArray)
+{
+    parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
+
+    rapidjson::Value::ConstArray fields = getFieldsOf("DynamicArray");
+
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "const", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "volatile", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "array", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "pointer", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "reference", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "literal", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "enum", false);
 }

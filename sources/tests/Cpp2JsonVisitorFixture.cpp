@@ -7,20 +7,7 @@
 #include <Cpp2JsonParameters.hpp>
 #include <Cpp2JsonActionFactory.hpp>
 #include <JsonOutputWriter.hpp>
-
-#include "../JsonOutputWriter.hpp"
-
-static std::string const LlvmBasePath{LLVM_DIR};
-
-static clang::tooling::CommandLineArguments makeLlvmIncludeArguments()
-{
-    std::string const llvmVersion = LlvmBasePath.substr(LlvmBasePath.find_last_of('/'));
-    clang::tooling::CommandLineArguments extraArguments{"-I" + LlvmBasePath + "/include/c++/v1",
-                                                        "-I" + LlvmBasePath + "/lib/clang/" + llvmVersion + "/include"};
-
-    extraArguments.push_back("-std=c++14");
-    return extraArguments;
-}
+#include <CommandLineHelpers.hpp>
 
 static Cpp2JsonParameters makeParameters()
 {
@@ -46,6 +33,22 @@ rapidjson::Value::ConstObject Cpp2JsonVisitorFixture::getClasses() const
     return m_document["classes"].GetObject();
 }
 
+rapidjson::Value::ConstObject Cpp2JsonVisitorFixture::getField(std::string const& className, std::string const& fieldName) const
+{
+    auto const fields = getFieldsOf(className);
+
+    for (auto it = fields.Begin(); it != fields.End(); ++it)
+    {
+        auto const field = it->GetObject();
+
+        if (field.HasMember("name") && field["name"].IsString() && field["name"].GetString() == fieldName)
+        {
+            return field;
+        }
+    }
+    assert(false);
+}
+
 rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getFieldsOf(const std::string &className) const
 {
     rapidjson::Value::ConstObject classes = m_document["classes"].GetObject();
@@ -61,11 +64,26 @@ rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getFieldsOf(const std::stri
     return members["fields"].GetArray();
 }
 
+rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getMethodsOf(const std::string &className) const
+{
+    rapidjson::Value::ConstObject classes = m_document["classes"].GetObject();
+
+    if (!classes.HasMember(className.c_str()))
+        ADD_FAILURE() << "Unable to find class '" << className << "'";
+
+    rapidjson::Value::ConstObject members = classes[className.c_str()].GetObject();
+
+    if (!members.HasMember("methods"))
+        ADD_FAILURE() << "Unable to find 'methods' member in class '" << className << "'";
+
+    return members["methods"].GetArray();
+}
+
 void Cpp2JsonVisitorFixture::parseCpp(const std::string &path, bool const logJson)
 {
     static llvm::cl::OptionCategory cpp2JsonCategory("Main options");
-    std::vector<char const*> argv{"", path.c_str(), "--", "-std=c++14"};
-    int argc = static_cast<int>(argv.size()) - 1;
+    std::vector<char const*> argv{"", path.c_str(), "--", CPP2JSON_SHARED_HEADER, "-std=c++14"};
+    int argc = static_cast<int>(argv.size());
 
     clang::tooling::CommonOptionsParser optionParser(argc, argv.data(), cpp2JsonCategory);
     clang::tooling::ClangTool tool(optionParser.getCompilations(), optionParser.getSourcePathList());

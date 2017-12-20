@@ -13,7 +13,9 @@ protected:
     void parseCpp(std::string const& path, bool const logJson = false);
     rapidjson::Value::ConstObject getEnums() const;
     rapidjson::Value::ConstObject getClasses() const;
+    rapidjson::Value::ConstObject getField(std::string const& className, std::string const& fieldName) const;
     rapidjson::Value::ConstArray getFieldsOf(std::string const& className) const;
+    rapidjson::Value::ConstArray getMethodsOf(std::string const& className) const;
 private:
     rapidjson::Document m_document;
 };

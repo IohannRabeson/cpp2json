@@ -1,5 +1,5 @@
-#ifndef CPP2JSONVISITOR_HPP
-#define CPP2JSONVISITOR_HPP
+#ifndef CPP2JSON_VISITOR_HPP
+#define CPP2JSON_VISITOR_HPP
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <rapidjson/document.h>
 
@@ -26,7 +26,8 @@ private:
     void parseBaseClasses(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
     void parseClassTemplateParameters(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
     void parseIncludeDeclaration(clang::Decl* declaration, rapidjson::Value& jsonObject);
-    void parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context) const;
+    void parseType(clang::ValueDecl const* const valueDeclaration, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context) const;
+    void parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context,  std::string const& dynamicArraySizeExpression = std::string()) const;
 
     bool isExcludedDeclaration(clang::CXXRecordDecl const* declaration)const;
     bool isExcludedDeclaration(clang::EnumDecl const* declaration)const;
@@ -48,4 +49,4 @@ private:
     rapidjson::Value::Object m_jsonEnums;
 };
 
-#endif // CPP2JSONVISITOR_HPP
+#endif // CPP2JSON_VISITOR_HPP
