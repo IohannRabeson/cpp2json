@@ -1,4 +1,4 @@
-# Cpp2Json [![Build Status](https://travis-ci.com/IohannRabeson/cpp2json.svg?token=oSgYDG8ZHmxB1gxGNZxP&branch=master)](https://travis-ci.com/IohannRabeson/cpp2json) 
+# Cpp2Json [![Build Status](https://travis-ci.com/IohannRabeson/cpp2json.svg?token=oSgYDG8ZHmxB1gxGNZxP&branch=master)](https://travis-ci.com/IohannRabeson/cpp2json) [![Codacy Badge](https://api.codacy.com/project/badge/Grade/456265ad762c40d5aca25cb649589c69)](https://www.codacy.com/app/IohannRabeson/cpp2json?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=IohannRabeson/cpp2json&amp;utm_campaign=Badge_Grade)
 
 ![general_usage](https://docs.google.com/drawings/d/e/2PACX-1vSvz2O3s9Oica9CyYAUq42n7U62ygswZS-CPsdTIPUDFLky-4Ff0zx-U-kBqJSubkmiBsJ9GsByTDsl/pub?w=1149&h=542)
 
