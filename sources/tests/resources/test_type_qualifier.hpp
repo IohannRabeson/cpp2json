@@ -50,4 +50,12 @@ struct ConstantArray
     int* const array_pointer_const[456];
 };
 
+struct DynamicArray
+{
+    DynamicArray() = default;
+private:
+    int* array_raw = nullptr;
+    unsigned int array_size = 0u;
+};
+
 #endif

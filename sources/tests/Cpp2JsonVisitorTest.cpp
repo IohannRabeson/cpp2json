@@ -149,3 +149,28 @@ TEST_F(Cpp2JsonVisitorFixture, ExcludedThings)
     // it don't be referenced in container 'classes'.
     EXPECT_TRUE( classes.FindMember("ExcludedClass") == classes.end() );
 }
+
+TEST_F(Cpp2JsonVisitorFixture, ConstantArray)
+{
+    parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
+
+    rapidjson::Value::ConstObject arrayRaw = getField("ConstantArray", "array_raw");
+
+    ASSERT_TRUE( arrayRaw.HasMember("array_size") );
+    ASSERT_EQ( arrayRaw["array_size"].GetString(), "123" );
+}
+
+TEST_F(Cpp2JsonVisitorFixture, DynamicArray)
+{
+    parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
+
+    rapidjson::Value::ConstArray fields = getFieldsOf("DynamicArray");
+
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "const", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "volatile", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "array", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "pointer", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "reference", false);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "literal", true);
+    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "enum", false);
+}

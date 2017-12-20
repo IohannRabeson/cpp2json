@@ -33,6 +33,22 @@ rapidjson::Value::ConstObject Cpp2JsonVisitorFixture::getClasses() const
     return m_document["classes"].GetObject();
 }
 
+rapidjson::Value::ConstObject Cpp2JsonVisitorFixture::getField(std::string const& className, std::string const& fieldName) const
+{
+    auto const fields = getFieldsOf(className);
+
+    for (auto it = fields.Begin(); it != fields.End(); ++it)
+    {
+        auto const field = it->GetObject();
+
+        if (field.HasMember("name") && field["name"].IsString() && field["name"].GetString() == fieldName)
+        {
+            return field;
+        }
+    }
+    assert(false);
+}
+
 rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getFieldsOf(const std::string &className) const
 {
     rapidjson::Value::ConstObject classes = m_document["classes"].GetObject();
@@ -67,7 +83,7 @@ void Cpp2JsonVisitorFixture::parseCpp(const std::string &path, bool const logJso
 {
     static llvm::cl::OptionCategory cpp2JsonCategory("Main options");
     std::vector<char const*> argv{"", path.c_str(), "--", CPP2JSON_SHARED_HEADER, "-std=c++14"};
-    int argc = static_cast<int>(argv.size()) - 1;
+    int argc = static_cast<int>(argv.size());
 
     clang::tooling::CommonOptionsParser optionParser(argc, argv.data(), cpp2JsonCategory);
     clang::tooling::ClangTool tool(optionParser.getCompilations(), optionParser.getSourcePathList());

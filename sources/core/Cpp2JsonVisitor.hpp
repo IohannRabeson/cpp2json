@@ -7,8 +7,6 @@ struct Cpp2JsonParameters;
 
 class Cpp2JsonVisitor : public clang::RecursiveASTVisitor<Cpp2JsonVisitor>
 {
-    static constexpr char const* const ExclusionAnnotationTag = "cpp2json_exclude";
-
 public:
     explicit Cpp2JsonVisitor(Cpp2JsonParameters const& parameters, rapidjson::Document& jsonDocument);
 
@@ -28,7 +26,8 @@ private:
     void parseBaseClasses(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
     void parseClassTemplateParameters(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
     void parseIncludeDeclaration(clang::Decl* declaration, rapidjson::Value& jsonObject);
-    void parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context) const;
+    void parseType(clang::ValueDecl const* const valueDeclaration, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context) const;
+    void parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context,  std::string const& dynamicArraySizeExpression = std::string()) const;
 
     bool isExcludedDeclaration(clang::CXXRecordDecl const* declaration)const;
     bool isExcludedDeclaration(clang::EnumDecl const* declaration)const;
