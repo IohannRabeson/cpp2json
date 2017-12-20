@@ -1,5 +1,5 @@
-#ifndef JSONOUTPUTWRITER_HPP
-#define JSONOUTPUTWRITER_HPP
+#ifndef CPP2JSON_OUTPUT_WRITER_HPP
+#define CPP2JSON_OUTPUT_WRITER_HPP
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 #include <rapidjson/ostreamwrapper.h>
@@ -19,4 +19,4 @@ private:
     Cpp2JsonParameters const& m_parameters;
 };
 
-#endif // JSONOUTPUTWRITER_HPP
+#endif // CPP2JSON_OUTPUT_WRITER_HPP

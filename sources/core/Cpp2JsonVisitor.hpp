@@ -1,5 +1,5 @@
-#ifndef CPP2JSONVISITOR_HPP
-#define CPP2JSONVISITOR_HPP
+#ifndef CPP2JSON_VISITOR_HPP
+#define CPP2JSON_VISITOR_HPP
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <rapidjson/document.h>
 
@@ -49,4 +49,4 @@ private:
     rapidjson::Value::Object m_jsonEnums;
 };
 
-#endif // CPP2JSONVISITOR_HPP
+#endif // CPP2JSON_VISITOR_HPP
