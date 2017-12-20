@@ -2,6 +2,7 @@
 #define CPP2JSON_VISITOR_HPP
 #include <clang/AST/RecursiveASTVisitor.h>
 #include <rapidjson/document.h>
+#include <map>
 
 struct Cpp2JsonParameters;
 

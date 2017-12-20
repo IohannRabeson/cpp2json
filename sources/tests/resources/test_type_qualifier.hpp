@@ -54,8 +54,11 @@ struct DynamicArray
 {
     DynamicArray() = default;
 private:
-    int* array_raw = nullptr;
+    CPP2JSON_ARRAY(array_size) int* array_raw = nullptr;
     unsigned int array_size = 0u;
+
+    CPP2JSON_ARRAY(array_size2) int* array_raw2 = nullptr;
+    unsigned int array_size2 = 0u;
 };
 
 #endif
