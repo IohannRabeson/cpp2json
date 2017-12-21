@@ -4,7 +4,6 @@
 #include <clang/Lex/Lexer.h>
 
 #include <iostream>
-#include <string>
 
 namespace
 {
@@ -66,56 +65,54 @@ namespace
         return false;
     }
 
-    template <class F>
-    bool getAnnotationString(clang::Decl const* declaration, F&& f, std::string& text)
-    {
-        auto attributes = declaration->getAttrs();
-
-        attributes.erase(std::remove_if(attributes.begin(), attributes.end(), &isNotAnAnnotation), attributes.end());
-        for (clang::Attr const* attribute : attributes)
-        {
-            clang::AnnotateAttr const* annotation = clang::cast<clang::AnnotateAttr const, clang::Attr const*>(attribute);
-
-            if (f(annotation->getAnnotation().str()))
-            {
-                text = annotation->getAnnotation().str();
-                return true;
-            }
-        }
-        return false;
-    }
-
     bool isConstructor(clang::CXXMethodDecl const* methodDeclaration)
     {
-        return clang::isa<clang::CXXConstructorDecl const>(methodDeclaration);
+        return methodDeclaration && clang::isa<clang::CXXConstructorDecl const>(methodDeclaration);
     }
 
     bool isDestructor(clang::CXXMethodDecl const* methodDeclaration)
     {
-        return clang::isa<clang::CXXDestructorDecl const>(methodDeclaration);
-    }
-
-    rapidjson::Value& getOrCreate(rapidjson::Document& document, std::string const& key, rapidjson::Type const type)
-    {
-        if (!document.HasMember(key))
-        {
-            rapidjson::Value jsonKey(key, document.GetAllocator());
-            rapidjson::Value newArray(type);
-
-            document.AddMember(jsonKey, newArray, document.GetAllocator());
-        }
-        return document[key];
+        return methodDeclaration && clang::isa<clang::CXXDestructorDecl const>(methodDeclaration);
     }
 
     /*!
-     * \brief Returns the qualified type without array or pointer or reference informations.
      *
+     * @tparam F Type of functional passed though the method.
+     * @param declaration
+     * @param selector A predicate use to select an annotation.
+     * @param text The annotation text if found, otherwise text is cleared.
+     * @return true if an annotation matching the predicate f has been found.
+     * @see hasAnnotation()
+     */
+    bool getAnnotationString(clang::Decl const* declaration, std::function<bool(std::string const&)>&& selector, std::string& text)
+    {
+        auto attributes = declaration->getAttrs();
+
+        // Remove from attributes all attribute which are not an annotation.
+        attributes.erase(std::remove_if(attributes.begin(), attributes.end(), &isNotAnAnnotation), attributes.end());
+        for (clang::Attr const* attribute : attributes)
+        {
+            clang::AnnotateAttr const* annotation = clang::cast<clang::AnnotateAttr const, clang::Attr const*>(attribute);
+            auto const annotationText = annotation->getAnnotation().str();
+
+            if (selector(annotationText))
+            {
+                text = annotationText;
+                return true;
+            }
+        }
+        text.clear();
+        return false;
+    }
+
+    /*!
+     * \brief Clean a qualified type.
+     * \return Returns the qualified type passed as parameter with qualifiers array, pointer or reference removed.
      * Example:
      *  - int const => int const
      *  - int [123] => int
      *  - int const [123] => int const
      * \param type
-     * \return
      */
     clang::QualType getCleanedType(clang::QualType const type)
     {
@@ -154,15 +151,25 @@ namespace
         return result;
     }
 
-    std::string decl2str(clang::Decl const *const declaration)
+    /*!
+     * Add or get a JSON node.
+     * @param document JSON document
+     * @param key Key of the node
+     * @param type Type of the requested node
+     * @return reference on the node whether added or found
+     */
+    rapidjson::Value& getOrCreate(rapidjson::Document& document, std::string const& key, rapidjson::Type const type)
     {
-        clang::LangOptions lopt;
+        assert(document.IsObject());
 
-        auto const& sourceManager = declaration->getASTContext().getSourceManager();
-        clang::SourceLocation b(declaration->getLocStart()), _e(declaration->getLocEnd());
-        clang::SourceLocation e(clang::Lexer::getLocForEndOfToken(_e, 0, sourceManager, lopt));
-        return std::string(sourceManager.getCharacterData(b),
-                           sourceManager.getCharacterData(e) - sourceManager.getCharacterData(b));
+        if (!document.HasMember(key))
+        {
+            rapidjson::Value jsonKey(key, document.GetAllocator());
+            rapidjson::Value newArray(type);
+
+            document.AddMember(jsonKey, newArray, document.GetAllocator());
+        }
+        return document[key];
     }
 }
 
@@ -223,16 +230,25 @@ void Cpp2JsonVisitor::parseEnum(clang::EnumDecl *enumDeclaration)
     rapidjson::Value jsonEnumValues(rapidjson::Type::kObjectType);
 
     jsonEnum.AddMember("underlying_type", getCleanedTypeString(integerTypeDeclaration), m_jsonAllocator);
+
+    // List enum's values
+    parseEnumerationValues(enumDeclaration, jsonEnum, jsonEnumValues);
+
+    parseAnnotations(enumDeclaration, jsonEnum);
+    parseIncludeDeclaration(enumDeclaration, jsonEnum);
+    addOrReplaceJsonMember(m_jsonEnums, enumDeclaration->getQualifiedNameAsString(), jsonEnum);
+}
+
+void Cpp2JsonVisitor::parseEnumerationValues(clang::EnumDecl const* enumDeclaration, rapidjson::Value& jsonEnum, rapidjson::Value& jsonEnumValues) const
+{
     for (auto const enumerator : enumDeclaration->enumerators())
     {
         rapidjson::Value jsonEnumeratorValue(enumerator->getNameAsString(), m_jsonAllocator);
 
         jsonEnumValues.AddMember(jsonEnumeratorValue, enumerator->getInitVal().getExtValue(), m_jsonAllocator);
     }
+
     jsonEnum.AddMember("values", jsonEnumValues, m_jsonAllocator);
-    parseAnnotations(enumDeclaration, jsonEnum);
-    parseIncludeDeclaration(enumDeclaration, jsonEnum);
-    addOrReplaceJsonMember(m_jsonEnums, enumDeclaration->getQualifiedNameAsString(), jsonEnum);
 }
 
 void Cpp2JsonVisitor::parseAnnotations(clang::Decl const* classDeclaration, rapidjson::Value& jsonObject)
@@ -247,6 +263,7 @@ void Cpp2JsonVisitor::parseAnnotations(clang::Decl const* classDeclaration, rapi
 
         jsonAnnotationArray.PushBack(jsonAnnotation, m_jsonAllocator);
     }
+
     jsonObject.AddMember("annotations", jsonAnnotationArray, m_jsonAllocator);
 }
 
@@ -381,38 +398,30 @@ void Cpp2JsonVisitor::parseType(clang::ValueDecl const* const valueDeclaration, 
 
         arraySizeExpression = std::to_string(size);
     }
-//    else if (valueType->isArrayType())
-//    {
-//        clang::ArrayType const* const arrayType = clang::dyn_cast_or_null<clang::ArrayType const, clang::Type const>(valueType.getTypePtr());
-//
-//        assert (arrayType);
-//
-//        arraySizeExpression = "0";
-//    }
     else if (getAnnotationString(valueDeclaration, [](std::string const& annotationText)
     {
         return annotationText.find("cpp2json_array") == 0;
     }, arraySizeAnnotationText))
     {
         auto endPos = arraySizeAnnotationText.find_last_of('\"');
+        int beginPos = 0;
 
-        // Illformed annotation text
-        assert (endPos != std::string::npos);
-
-        auto i = endPos - 1;
-        int beginPos = -1;
-
-        while (i > 0 && i < arraySizeAnnotationText.size())
+        // Illformed annotation text (missing trailing \")
+        if (endPos != std::string::npos)
         {
-            if (arraySizeAnnotationText[i] == '\"')
-            {
-                beginPos = i;
-                break;
-            }
-            --i;
-        }
+            auto i = endPos - 1;
 
-        arraySizeExpression = arraySizeAnnotationText.substr(beginPos + 1, (endPos - beginPos - 1));
+            while (i > 0 && i < arraySizeAnnotationText.size())
+            {
+                if (arraySizeAnnotationText[i] == '\"')
+                {
+                    beginPos = i + 1;
+                    break;
+                }
+                --i;
+            }
+        }
+        arraySizeExpression = arraySizeAnnotationText.substr(beginPos, (endPos - beginPos));
     }
 
     parseType(valueType, root, jsonKey, context, arraySizeExpression);

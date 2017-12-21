@@ -18,6 +18,7 @@ public:
 private:
     void parseClass(clang::CXXRecordDecl *classDeclaration);
     void parseEnum(clang::EnumDecl* enumDeclaration);
+    void parseEnumerationValues(clang::EnumDecl const* enumDeclaration, rapidjson::Value& jsonEnum, rapidjson::Value& jsonEnumValues) const;
     void parseAnnotations(clang::Decl const* classDeclaration, rapidjson::Value& jsonClassObject);
     void parseMethod(clang::CXXMethodDecl const* methodDeclaration, rapidjson::Value::Array& jsonMethodArray);
     void parseMethods(clang::CXXRecordDecl* classDeclaration, rapidjson::Value& jsonClassObject);
