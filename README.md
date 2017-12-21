@@ -124,6 +124,7 @@ This is required because clang assume the executable is located in a standard di
 to deduce the includes paths.
 
 ## How to build
+You should generate the project out of the sources directory.  
 ```bash
    $> mkdir builds && cd builds
    $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH=<your_path_to_llvm_install>
@@ -132,4 +133,20 @@ to deduce the includes paths.
 If you need to set more than one path to CMAKE_PREFIX_PATH separate each path by a semi-colon ';'. You should encloses the paths using double quotes ('`"`')
 ```bash
    $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH="<llvm_path>;<qt_path>"
+```
+
+### Building with OSX
+On OSX hopefully we can use [Homebrew](https://brew.sh/index_fr.html) to install all dependencies.  
+This can be done with only one command:
+```bash
+    $> brew install qt5 llvm
+```
+And it's done. Use CMake to generate the project:
+```bash
+   $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH="/usr/local/opt/llvm;/usr/local/opt/qt5"
+```
+
+Finally build:
+```bash
+    $> cmake --build .
 ```
