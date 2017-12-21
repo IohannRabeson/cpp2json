@@ -8,7 +8,8 @@ set(SRC
     ../app/JsonOutputWriter.hpp
     ../app/JsonOutputWriter.cpp
     gtest.cpp
-        resources/test_example.hpp)
+    resources/test_example.hpp
+)
 
 add_executable(unit_tests ${SRC})
 set_target_properties(unit_tests PROPERTIES COMPILE_FLAGS -fvisibility-inlines-hidden)

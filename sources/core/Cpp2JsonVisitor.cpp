@@ -151,6 +151,17 @@ namespace
         return result;
     }
 
+    void removeAll(std::string& str, std::string const& toRemove)
+    {
+        auto pos = str.find(toRemove);
+
+        while (pos != std::string::npos)
+        {
+            str.erase(pos, toRemove.size());
+            pos = str.find(toRemove);
+        }
+    }
+
     /*!
      * Add or get a JSON node.
      * @param document JSON document
@@ -541,14 +552,7 @@ std::string Cpp2JsonVisitor::removeClassStructEnum(std::string typeName) const
 
     for (auto const& toRemove : KeywordToRemove)
     {
-        // TODO: extract this code => function std::string removeAll(std::string, std::string)
-        auto pos = typeName.find(toRemove);
-
-        while (pos != std::string::npos)
-        {
-            typeName.erase(pos, toRemove.size());
-            pos = typeName.find(toRemove);
-        }
+        removeAll(typeName, toRemove);
     }
     return typeName;
 }
