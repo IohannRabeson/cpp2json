@@ -156,21 +156,43 @@ TEST_F(Cpp2JsonVisitorFixture, ConstantArray)
 
     rapidjson::Value::ConstObject arrayRaw = getField("ConstantArray", "array_raw");
 
-    ASSERT_TRUE( arrayRaw.HasMember("array_size") );
-    ASSERT_EQ( arrayRaw["array_size"].GetString(), "123" );
+    ASSERT_TRUE( arrayRaw.HasMember("type") );
+
+    rapidjson::Value::ConstObject arrayRawType(arrayRaw["type"].GetObject());
+
+    ASSERT_TRUE( arrayRawType.HasMember("array_size") );
+
+    ASSERT_STREQ( arrayRawType["array_size"].GetString(), "123" );
 }
 
 TEST_F(Cpp2JsonVisitorFixture, DynamicArray)
 {
     parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
 
-    rapidjson::Value::ConstArray fields = getFieldsOf("DynamicArray");
+    rapidjson::Value::ConstObject arrayRaw = getField("DynamicArray", "array_raw");
 
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "const", false);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "volatile", false);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "array", true);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "pointer", false);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "reference", false);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "literal", true);
-    EXPECT_PRED_FORMAT4(assertFieldHaveQualifier, fields, "array_raw", "enum", false);
+    ASSERT_TRUE( arrayRaw.HasMember("type") );
+
+    rapidjson::Value::ConstObject arrayRawType(arrayRaw["type"].GetObject());
+
+    ASSERT_TRUE( arrayRawType.HasMember("array_size") );
+    // We want the C++ expression required to get the array size.
+    // This expression should be passed as annotation.
+    ASSERT_STREQ( arrayRawType["array_size"].GetString(), "array_size" );
+}
+
+TEST_F(Cpp2JsonVisitorFixture, DynamicArray2)
+{
+    parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
+
+    rapidjson::Value::ConstObject arrayRaw = getField("DynamicArray", "array_raw2");
+
+    ASSERT_TRUE( arrayRaw.HasMember("type") );
+
+    rapidjson::Value::ConstObject arrayRawType(arrayRaw["type"].GetObject());
+
+    ASSERT_TRUE( arrayRawType.HasMember("array_size") );
+    // We want the C++ expression required to get the array size.
+    // This expression should be passed as annotation.
+    ASSERT_STREQ( arrayRawType["array_size"].GetString(), "array_size2" );
 }

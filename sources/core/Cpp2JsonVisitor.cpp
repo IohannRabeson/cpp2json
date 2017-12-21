@@ -1,8 +1,9 @@
 #include "Cpp2JsonVisitor.hpp"
 #include "Cpp2JsonParameters.hpp"
 
+#include <clang/Lex/Lexer.h>
+
 #include <iostream>
-#include <string>
 
 namespace
 {
@@ -64,56 +65,54 @@ namespace
         return false;
     }
 
-    template <class F>
-    bool getAnnotationString(clang::Decl const* declaration, F&& f, std::string& text)
-    {
-        auto attributes = declaration->getAttrs();
-
-        attributes.erase(std::remove_if(attributes.begin(), attributes.end(), &isNotAnAnnotation), attributes.end());
-        for (clang::Attr const* attribute : attributes)
-        {
-            clang::AnnotateAttr const* annotation = clang::cast<clang::AnnotateAttr const, clang::Attr const*>(attribute);
-
-            if (f(annotation->getAnnotation().str()))
-            {
-                text = annotation->getAnnotation().str();
-                return true;
-            }
-        }
-        return false;
-    }
-
     bool isConstructor(clang::CXXMethodDecl const* methodDeclaration)
     {
-        return clang::isa<clang::CXXConstructorDecl const>(methodDeclaration);
+        return methodDeclaration && clang::isa<clang::CXXConstructorDecl const>(methodDeclaration);
     }
 
     bool isDestructor(clang::CXXMethodDecl const* methodDeclaration)
     {
-        return clang::isa<clang::CXXDestructorDecl const>(methodDeclaration);
-    }
-
-    rapidjson::Value& getOrCreate(rapidjson::Document& document, std::string const& key, rapidjson::Type const type)
-    {
-        if (!document.HasMember(key))
-        {
-            rapidjson::Value jsonKey(key, document.GetAllocator());
-            rapidjson::Value newArray(type);
-
-            document.AddMember(jsonKey, newArray, document.GetAllocator());
-        }
-        return document[key];
+        return methodDeclaration && clang::isa<clang::CXXDestructorDecl const>(methodDeclaration);
     }
 
     /*!
-     * \brief Returns the qualified type without array or pointer or reference informations.
      *
+     * @tparam F Type of functional passed though the method.
+     * @param declaration
+     * @param selector A predicate use to select an annotation.
+     * @param text The annotation text if found, otherwise text is cleared.
+     * @return true if an annotation matching the predicate f has been found.
+     * @see hasAnnotation()
+     */
+    bool getAnnotationString(clang::Decl const* declaration, std::function<bool(std::string const&)>&& selector, std::string& text)
+    {
+        auto attributes = declaration->getAttrs();
+
+        // Remove from attributes all attribute which are not an annotation.
+        attributes.erase(std::remove_if(attributes.begin(), attributes.end(), &isNotAnAnnotation), attributes.end());
+        for (clang::Attr const* attribute : attributes)
+        {
+            clang::AnnotateAttr const* annotation = clang::cast<clang::AnnotateAttr const, clang::Attr const*>(attribute);
+            auto const annotationText = annotation->getAnnotation().str();
+
+            if (selector(annotationText))
+            {
+                text = annotationText;
+                return true;
+            }
+        }
+        text.clear();
+        return false;
+    }
+
+    /*!
+     * \brief Clean a qualified type.
+     * \return Returns the qualified type passed as parameter with qualifiers array, pointer or reference removed.
      * Example:
      *  - int const => int const
      *  - int [123] => int
      *  - int const [123] => int const
      * \param type
-     * \return
      */
     clang::QualType getCleanedType(clang::QualType const type)
     {
@@ -150,6 +149,27 @@ namespace
             pos = result.find(toReplace, pos + replacement.size());
         }
         return result;
+    }
+
+    /*!
+     * Add or get a JSON node.
+     * @param document JSON document
+     * @param key Key of the node
+     * @param type Type of the requested node
+     * @return reference on the node whether added or found
+     */
+    rapidjson::Value& getOrCreate(rapidjson::Document& document, std::string const& key, rapidjson::Type const type)
+    {
+        assert(document.IsObject());
+
+        if (!document.HasMember(key))
+        {
+            rapidjson::Value jsonKey(key, document.GetAllocator());
+            rapidjson::Value newArray(type);
+
+            document.AddMember(jsonKey, newArray, document.GetAllocator());
+        }
+        return document[key];
     }
 }
 
@@ -210,16 +230,25 @@ void Cpp2JsonVisitor::parseEnum(clang::EnumDecl *enumDeclaration)
     rapidjson::Value jsonEnumValues(rapidjson::Type::kObjectType);
 
     jsonEnum.AddMember("underlying_type", getCleanedTypeString(integerTypeDeclaration), m_jsonAllocator);
+
+    // List enum's values
+    parseEnumerationValues(enumDeclaration, jsonEnum, jsonEnumValues);
+
+    parseAnnotations(enumDeclaration, jsonEnum);
+    parseIncludeDeclaration(enumDeclaration, jsonEnum);
+    addOrReplaceJsonMember(m_jsonEnums, enumDeclaration->getQualifiedNameAsString(), jsonEnum);
+}
+
+void Cpp2JsonVisitor::parseEnumerationValues(clang::EnumDecl const* enumDeclaration, rapidjson::Value& jsonEnum, rapidjson::Value& jsonEnumValues) const
+{
     for (auto const enumerator : enumDeclaration->enumerators())
     {
         rapidjson::Value jsonEnumeratorValue(enumerator->getNameAsString(), m_jsonAllocator);
 
         jsonEnumValues.AddMember(jsonEnumeratorValue, enumerator->getInitVal().getExtValue(), m_jsonAllocator);
     }
+
     jsonEnum.AddMember("values", jsonEnumValues, m_jsonAllocator);
-    parseAnnotations(enumDeclaration, jsonEnum);
-    parseIncludeDeclaration(enumDeclaration, jsonEnum);
-    addOrReplaceJsonMember(m_jsonEnums, enumDeclaration->getQualifiedNameAsString(), jsonEnum);
 }
 
 void Cpp2JsonVisitor::parseAnnotations(clang::Decl const* classDeclaration, rapidjson::Value& jsonObject)
@@ -234,6 +263,7 @@ void Cpp2JsonVisitor::parseAnnotations(clang::Decl const* classDeclaration, rapi
 
         jsonAnnotationArray.PushBack(jsonAnnotation, m_jsonAllocator);
     }
+
     jsonObject.AddMember("annotations", jsonAnnotationArray, m_jsonAllocator);
 }
 
@@ -370,54 +400,32 @@ void Cpp2JsonVisitor::parseType(clang::ValueDecl const* const valueDeclaration, 
     }
     else if (getAnnotationString(valueDeclaration, [](std::string const& annotationText)
     {
-        return annotationText.find("cpp2json_considere_as_array(") == 0;
+        return annotationText.find("cpp2json_array") == 0;
     }, arraySizeAnnotationText))
     {
-        auto expressionStart = arraySizeAnnotationText.find_last_of("(") + 1;
-        auto expressionSize = arraySizeAnnotationText.find_last_of(")") - expressionStart;
+        auto endPos = arraySizeAnnotationText.find_last_of('\"');
+        int beginPos = 0;
 
-        arraySizeExpression = arraySizeAnnotationText.substr(expressionStart, expressionSize);
+        // Illformed annotation text (missing trailing \")
+        if (endPos != std::string::npos)
+        {
+            auto i = endPos - 1;
+
+            while (i > 0 && i < arraySizeAnnotationText.size())
+            {
+                if (arraySizeAnnotationText[i] == '\"')
+                {
+                    beginPos = i + 1;
+                    break;
+                }
+                --i;
+            }
+        }
+        arraySizeExpression = arraySizeAnnotationText.substr(beginPos, (endPos - beginPos));
     }
+
     parseType(valueType, root, jsonKey, context, arraySizeExpression);
 }
-/*
-void Cpp2JsonVisitor::parseType(clang::QualType const& type, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context) const
-{
-    // \var cleanedType Qualified type without array marker, or pointer, reference.
-    auto const cleanedType = getCleanedType(type);
-    rapidjson::Value jsonTypeObject(rapidjson::Type::kObjectType);
-
-    // The size array is an informatioon only available if the array is a constant array.
-    // If it is an another array type (see derived classes from clang::ArrayType) then the user
-    // should use annotations to define the array size.
-    // This should handle any possible cases (even the cases where a variable stores the array size).
-    if (type->isConstantArrayType())
-    {
-        clang::ConstantArrayType const* const constantArrayType = clang::dyn_cast_or_null<clang::ConstantArrayType const, clang::Type const>(type.getTypePtr());
-
-        // Only 1-dimensional arrays are supported
-        // TODO: N-dimensional arrays support (require something like multiple arraySize in JSON?)
-        auto const size = constantArrayType->getSize().getLimitedValue();
-
-        jsonTypeObject.AddMember("key", getCleanedTypeString(cleanedType), m_jsonAllocator);
-        jsonTypeObject.AddMember("expression", getNormalizedTypeString(type), m_jsonAllocator);
-        jsonTypeObject.AddMember("array_size", size, m_jsonAllocator);
-    }
-    else
-    {
-        jsonTypeObject.AddMember("key", getCleanedTypeString(type), m_jsonAllocator);
-        jsonTypeObject.AddMember("expression", getNormalizedTypeString(type), m_jsonAllocator);
-    }
-    jsonTypeObject.AddMember("pointer", (type->isPointerType()), m_jsonAllocator);
-    jsonTypeObject.AddMember("array", (type->isArrayType()), m_jsonAllocator);
-    jsonTypeObject.AddMember("reference", (type->isReferenceType()), m_jsonAllocator);
-    jsonTypeObject.AddMember("const", (cleanedType.isLocalConstQualified()), m_jsonAllocator);
-    jsonTypeObject.AddMember("volatile", (type.isVolatileQualified()), m_jsonAllocator);
-    jsonTypeObject.AddMember("literal", (cleanedType->isLiteralType(context)), m_jsonAllocator);
-    jsonTypeObject.AddMember("enum", (cleanedType->isEnumeralType()), m_jsonAllocator);
-    root.AddMember(rapidjson::Value(jsonKey, m_jsonAllocator), jsonTypeObject, m_jsonAllocator);
-}
-*/
 
 void Cpp2JsonVisitor::parseType(clang::QualType const& completeType,
                                 rapidjson::Value& root,
@@ -428,29 +436,30 @@ void Cpp2JsonVisitor::parseType(clang::QualType const& completeType,
     clang::QualType effectiveType = completeType;
     rapidjson::Value jsonTypeObject(rapidjson::Type::kObjectType);
 
-    if (!dynamicArraySizeExpression.empty())
+    // NOTE: array size is an expression and is stored by a string.
+    if (std::count_if(dynamicArraySizeExpression.begin(), dynamicArraySizeExpression.end(),
+                      [](char const c){ return !std::isspace(c); }) > 0)
     {
         rapidjson::Value sizeExpression(dynamicArraySizeExpression.c_str(), m_jsonAllocator);
 
         jsonTypeObject.AddMember("array_size", sizeExpression, m_jsonAllocator);
     }
+
     if (completeType->isArrayType())
     {
         clang::ArrayType const* const arrayType = clang::dyn_cast_or_null<clang::ArrayType const, clang::Type const>(completeType.getTypePtr());
 
-        if (arrayType)
-        {
-            effectiveType = arrayType->getElementType();
-        }
+        assert (arrayType);
+
+        effectiveType = arrayType->getElementType();
     }
-    if (completeType->isConstantArrayType())
+    else if (completeType->isConstantArrayType())
     {
         clang::ConstantArrayType const* const arrayType = clang::dyn_cast_or_null<clang::ConstantArrayType const, clang::Type const>(completeType.getTypePtr());
 
-        if (arrayType)
-        {
-            jsonTypeObject.AddMember("array_size", std::to_string(arrayType->getSize().getLimitedValue()), m_jsonAllocator);
-        }
+        assert (arrayType);
+
+        effectiveType = arrayType->getElementType();
     }
     // \var cleanedType Qualified type without any array marker, or pointer or reference.
     clang::QualType const cleanedType = getCleanedType(effectiveType);
