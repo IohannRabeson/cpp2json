@@ -113,9 +113,9 @@ Main options:
 ```
 Note the --, it's really needed because this flag define where the options passed to the clang driver begins.  
 If cpp2json can't find standard includes (it can happen if you have moved cpp2json in another location), you should specify
-yourself using the correct llvm include paths using -I (after the --).
+yourself using the correct llvm include paths using `-I` (after the --).
 
-Don't forget to specify the c++ version used too as clang option (e.g: -std=c++14).
+Don't forget to specify the c++ version used as clang option (e.g: -std=c++14).
 Example:
 ```
   cpp2json [options] <source0> [... <sourceN>] -- -std=c++14
@@ -130,7 +130,7 @@ You should generate the project out of the sources directory.
    $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH=<your_path_to_llvm_install>
    $> ninja
 ```
-If you need to set more than one path to CMAKE_PREFIX_PATH separate each path by a semi-colon ';'. You should encloses the paths using double quotes ('`"`')
+If you need to set more than one path to CMAKE_PREFIX_PATH separate each path by a semi-colon ';'. You should encloses the paths using double quotes ('`"`') since `;` is a special character on most shell.
 ```bash
    $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH="<llvm_path>;<qt_path>"
 ```
