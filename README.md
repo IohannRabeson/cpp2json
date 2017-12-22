@@ -123,6 +123,12 @@ Example:
 This is required because clang assume the executable is located in a standard directory (in llvm/bin) and use that
 to deduce the includes paths.
 
+## How to clone
+You should clone git submodules if you want to build tests:
+```bash
+    $> git clone --recursive git@github.com:IohannRabeson/cpp2json.git
+```
+
 ## How to build
 You should generate the project out of the sources directory.  
 ```bash

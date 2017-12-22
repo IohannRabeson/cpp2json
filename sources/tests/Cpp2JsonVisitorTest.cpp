@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include "Cpp2JsonVisitorFixture.hpp"
 #include <Cpp2Json.hpp>
+#include <algorithm>
 
 TEST_F(Cpp2JsonVisitorFixture, SimpleFieldsSimpleQualifiers)
 {
@@ -195,4 +196,13 @@ TEST_F(Cpp2JsonVisitorFixture, DynamicArray2)
     // We want the C++ expression required to get the array size.
     // This expression should be passed as annotation.
     ASSERT_STREQ( arrayRawType["array_size"].GetString(), "array_size2" );
+}
+
+TEST_F(Cpp2JsonVisitorFixture, VersionTest)
+{
+    parseCpp(ResourcesPath + "/test_type_qualifier.hpp");
+    std::string const version = getCpp2JsonVersion();
+
+    ASSERT_TRUE( version.size() > 0 );
+    ASSERT_TRUE( std::count_if(version.begin(), version.end(), [](char const c){ return !std::isspace(c); }) > 0 );
 }

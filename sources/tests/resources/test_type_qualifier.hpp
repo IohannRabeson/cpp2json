@@ -13,6 +13,7 @@
 #if!defined TEST_TYPE_QUALIFIER_HPP
 #define TEST_TYPE_QUALIFIER_HPP
 #include <Cpp2Json.hpp>
+#include <string>
 
 struct SimpleFieldsSimpleQualifiers
 {
@@ -59,6 +60,13 @@ private:
 
     CPP2JSON_ARRAY(array_size2) int* array_raw2 = nullptr;
     unsigned int array_size2 = 0u;
+};
+
+struct Expression
+{
+    std::string const& text;
+    int int_array[4];
+    void (*raw_function_pointer)();
 };
 
 #endif
