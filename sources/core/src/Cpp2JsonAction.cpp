@@ -1,7 +1,6 @@
 #include "Cpp2JsonAction.hpp"
 #include "Cpp2JsonVisitor.hpp"
 
-#include <clang/AST/ASTConsumer.h>
 #include <clang/Frontend/CompilerInstance.h>
 
 #include <iostream>
@@ -34,4 +33,3 @@ std::unique_ptr<clang::ASTConsumer> Cpp2JsonAction::CreateASTConsumer(clang::Com
 {
     return std::unique_ptr<clang::ASTConsumer>(new Cpp2JsonConsumer(m_parameters, m_jsonDocument));
 }
-

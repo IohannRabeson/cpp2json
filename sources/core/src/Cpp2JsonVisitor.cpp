@@ -151,6 +151,17 @@ namespace
         return result;
     }
 
+    void removeAll(std::string& str, std::string const& toRemove)
+    {
+        auto pos = str.find(toRemove);
+
+        while (pos != std::string::npos)
+        {
+            str.erase(pos, toRemove.size());
+            pos = str.find(toRemove);
+        }
+    }
+
     /*!
      * Add or get a JSON node.
      * @param document JSON document
@@ -181,6 +192,11 @@ Cpp2JsonVisitor::Cpp2JsonVisitor(Cpp2JsonParameters const& parameters, rapidjson
     m_jsonEnums(getOrCreate(m_jsonDocument, "enums", rapidjson::Type::kObjectType).GetObject())
 {
     addTypeNameReplacer("_Bool", "bool");
+
+    // TODO: store "cpp2json_format" into a variable.
+    rapidjson::Value& formatVersion = getOrCreate(jsonDocument, "cpp2json_format", rapidjson::Type::kStringType);
+
+    formatVersion.SetString(CPP2JSON_CORE_VERSION);
 }
 
 void Cpp2JsonVisitor::addTypeNameReplacer(std::string const& original, std::string const& replacement)
@@ -385,6 +401,7 @@ void Cpp2JsonVisitor::parseIncludeDeclaration(clang::Decl* declaration, rapidjso
     jsonObject.AddMember("file", fileName, m_jsonAllocator);
 }
 
+
 void Cpp2JsonVisitor::parseType(clang::ValueDecl const* const valueDeclaration, rapidjson::Value& root, std::string const& jsonKey, clang::ASTContext& context) const
 {
     auto const valueType = valueDeclaration->getType();
@@ -403,10 +420,12 @@ void Cpp2JsonVisitor::parseType(clang::ValueDecl const* const valueDeclaration, 
         return annotationText.find("cpp2json_array") == 0;
     }, arraySizeAnnotationText))
     {
+        // Extract the expression size.
+        // Always between `"`.
         auto endPos = arraySizeAnnotationText.find_last_of('\"');
         int beginPos = 0;
 
-        // Illformed annotation text (missing trailing \")
+        // Ill-formed annotation text (missing trailing \")
         if (endPos != std::string::npos)
         {
             auto i = endPos - 1;
@@ -461,6 +480,7 @@ void Cpp2JsonVisitor::parseType(clang::QualType const& completeType,
 
         effectiveType = arrayType->getElementType();
     }
+
     // \var cleanedType Qualified type without any array marker, or pointer or reference.
     clang::QualType const cleanedType = getCleanedType(effectiveType);
 
@@ -484,7 +504,7 @@ bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXRecordDecl const* declarat
 bool Cpp2JsonVisitor::isExcludedDeclaration(clang::CXXMethodDecl const* declaration) const
 {
     return (hasExcludeAnnotation(declaration) ||
-            !declaration->isUserProvided() || // isUserProvided ? I don't remember what that means.
+            !declaration->isUserProvided() || // isUserProvided ? I don't remember what that means. Guess this is true if the C++ come from the current file.
             declaration->isCopyAssignmentOperator() ||
             declaration->isMoveAssignmentOperator() ||
             isConstructor(declaration) ||
@@ -499,7 +519,8 @@ bool Cpp2JsonVisitor::isExcludedDeclaration(clang::EnumDecl const* declaration) 
 
 bool Cpp2JsonVisitor::hasExcludeAnnotation(clang::Decl const* declaration) const
 {
-    return hasAnnotation(declaration, MatchText(m_parameters.excludeAnnotationContent)) || hasAnnotation(declaration, MatchText(ExclusionAnnotationTag));
+    return hasAnnotation(declaration, MatchText(m_parameters.excludeAnnotationContent)) ||
+            hasAnnotation(declaration, MatchText(ExclusionAnnotationTag));
 }
 
 void Cpp2JsonVisitor::addOrReplaceJsonMember(rapidjson::Value::Object &object, const std::string &key, rapidjson::Value& value)
@@ -532,23 +553,16 @@ std::string Cpp2JsonVisitor::replaceTypeNames(std::string typeName) const
 
 std::string Cpp2JsonVisitor::removeClassStructEnum(std::string typeName) const
 {
-    static std::vector<std::string> const KeywordToRemove =
+    static std::vector<std::string> const ToRemove =
     {
         "class ",
         "struct ",
         "enum "
     };
 
-    for (auto const& toRemove : KeywordToRemove)
+    for (auto const& toRemove : ToRemove)
     {
-        // TODO: extract this code => function std::string removeAll(std::string, std::string)
-        auto pos = typeName.find(toRemove);
-
-        while (pos != std::string::npos)
-        {
-            typeName.erase(pos, toRemove.size());
-            pos = typeName.find(toRemove);
-        }
+        removeAll(typeName, toRemove);
     }
     return typeName;
 }

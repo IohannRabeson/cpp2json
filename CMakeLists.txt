@@ -28,5 +28,7 @@ if (NOT CPP2JSON_VERSION)
     endif()
 endif()
 
+message("Build version: ${CPP2JSON_VERSION}")
+
 add_subdirectory(sources)
 
