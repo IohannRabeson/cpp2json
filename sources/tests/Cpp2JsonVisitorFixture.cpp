@@ -23,13 +23,21 @@ Cpp2JsonVisitorFixture::Cpp2JsonVisitorFixture() :
 {
 }
 
+std::string Cpp2JsonVisitorFixture::getCpp2JsonVersion() const
+{
+    // TODO: store "cpp2json_format" into a variable.
+    return m_document["cpp2json_format"].GetString();
+}
+
 rapidjson::Value::ConstObject Cpp2JsonVisitorFixture::getEnums() const
 {
+    // TODO: store "enums" into a variable.
     return m_document["enums"].GetObject();
 }
 
 rapidjson::Value::ConstObject Cpp2JsonVisitorFixture::getClasses() const
 {
+    // TODO: store "classes" into a variable.
     return m_document["classes"].GetObject();
 }
 
@@ -51,6 +59,7 @@ rapidjson::Value::ConstObject Cpp2JsonVisitorFixture::getField(std::string const
 
 rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getFieldsOf(const std::string &className) const
 {
+    // TODO: store "classes" into a variable.
     rapidjson::Value::ConstObject classes = m_document["classes"].GetObject();
 
     if (!classes.HasMember(className.c_str()))
@@ -66,6 +75,7 @@ rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getFieldsOf(const std::stri
 
 rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getMethodsOf(const std::string &className) const
 {
+    // TODO: store "classes" into a variable.
     rapidjson::Value::ConstObject classes = m_document["classes"].GetObject();
 
     if (!classes.HasMember(className.c_str()))

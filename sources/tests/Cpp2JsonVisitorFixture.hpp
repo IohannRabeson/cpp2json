@@ -16,6 +16,7 @@ protected:
     rapidjson::Value::ConstObject getField(std::string const& className, std::string const& fieldName) const;
     rapidjson::Value::ConstArray getFieldsOf(std::string const& className) const;
     rapidjson::Value::ConstArray getMethodsOf(std::string const& className) const;
+    std::string getCpp2JsonVersion() const;
 private:
     rapidjson::Document m_document;
 };
