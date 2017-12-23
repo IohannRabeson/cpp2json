@@ -13,7 +13,7 @@ GENERATOR="Ninja"
 CURRENT_DIR="$(pwd)"
 
 mkdir -p "$BUILD_DIR" && cd "$BUILD_DIR"
-cmake .. -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_PREFIX_PATH=/usr/local/opt/llvm/
+cmake .. -G "$GENERATOR" -DCMAKE_BUILD_TYPE=$CONFIG -DCMAKE_PREFIX_PATH=/usr/local/opt/llvm/ -DTRAVIS_BUILD_NUMBER=$TRAVIS_BUILD_NUMBER
 cmake --build ./ --clean-first --target all
 cd "$CURRENT_DIR"
 

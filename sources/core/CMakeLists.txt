@@ -10,15 +10,15 @@ if (NOT CPP2JSON_CORE_VERSION)
 endif()
 
 set(BACKEND_SOURCES
-    Cpp2JsonVisitor.hpp
-    Cpp2JsonVisitor.cpp
-    Cpp2JsonAction.hpp
-    Cpp2JsonAction.cpp
-    Cpp2JsonActionFactory.hpp
-    Cpp2JsonActionFactory.cpp
-    Cpp2JsonParameters.hpp
-    CommandLineHelpers.hpp
-    CommandLineHelpers.cpp
+    include/Cpp2JsonVisitor.hpp
+    src/Cpp2JsonVisitor.cpp
+    include/Cpp2JsonAction.hpp
+    src/Cpp2JsonAction.cpp
+    include/Cpp2JsonActionFactory.hpp
+    src/Cpp2JsonActionFactory.cpp
+    include/Cpp2JsonParameters.hpp
+    include/CommandLineHelpers.hpp
+    src/CommandLineHelpers.cpp
 )
 
 get_filename_component(LLVM_DIR ${LLVM_INCLUDE_DIR} DIRECTORY)
@@ -33,3 +33,8 @@ target_compile_definitions(cpp2json-core PRIVATE CPP2JSON_CORE_VERSION="${CPP2JS
 set_property(TARGET cpp2json-core PROPERTY CXX_STANDARD 14)
 set_property(TARGET cpp2json-core PROPERTY CXX_STANDARD_REQUIRED ON)
 cpp2json_private_stuff(cpp2json-core PRIVATE)
+
+target_include_directories(cpp2json-core PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+        PRIVATE src)
