@@ -145,7 +145,7 @@ If you need to set more than one path to CMAKE_PREFIX_PATH separate each path by
 On OSX hopefully we can use [Homebrew](https://brew.sh/index_fr.html) to install all dependencies.  
 This can be done with only one command:
 ```bash
-    $> brew install qt5 llvm
+    $> brew install llvm
 ```
 And it's done. Use CMake to generate the project:
 ```bash
