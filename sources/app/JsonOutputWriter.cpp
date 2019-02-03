@@ -1,5 +1,5 @@
 #include "JsonOutputWriter.hpp"
-#include "Cpp2JsonParameters.hpp"
+#include <Cpp2JsonParameters.hpp>
 
 #include <rapidjson/ostreamwrapper.h>
 #include <rapidjson/writer.h>

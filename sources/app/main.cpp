@@ -4,7 +4,7 @@
 
 #include <CommandLineHelpers.hpp>
 #include <Cpp2JsonActionFactory.hpp>
-#include "Cpp2JsonParameters.hpp"
+#include <Cpp2JsonParameters.hpp>
 #include "JsonOutputWriter.hpp"
 #include <rapidjson/istreamwrapper.h>
 
