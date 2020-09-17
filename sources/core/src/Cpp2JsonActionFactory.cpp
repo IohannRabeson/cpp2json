@@ -8,9 +8,9 @@ Cpp2JsonActionFactory::Cpp2JsonActionFactory(Cpp2JsonParameters const& parameter
 {
 }
 
-clang::FrontendAction *Cpp2JsonActionFactory::create()
+std::unique_ptr<clang::FrontendAction> Cpp2JsonActionFactory::create()
 {
-    return new Cpp2JsonAction(m_parameters, m_jsonDocument);
+    return std::make_unique<Cpp2JsonAction>(m_parameters, m_jsonDocument);
 }
 
 std::unique_ptr<Cpp2JsonActionFactory> newCpp2JsonActionFactory(Cpp2JsonParameters const& parameters, rapidjson::Document& document)

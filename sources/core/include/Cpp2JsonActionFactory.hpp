@@ -10,7 +10,7 @@ class Cpp2JsonActionFactory : public clang::tooling::FrontendActionFactory
 public:
     explicit Cpp2JsonActionFactory(Cpp2JsonParameters const& parameters, rapidjson::Document& document);
 
-    clang::FrontendAction *create() override;
+    std::unique_ptr<clang::FrontendAction> create() override;
 private:
     rapidjson::Document& m_jsonDocument;
     Cpp2JsonParameters const& m_parameters;
