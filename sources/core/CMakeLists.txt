@@ -12,6 +12,7 @@ set(BACKEND_SOURCES
 
 get_filename_component(LLVM_DIR ${LLVM_INCLUDE_DIR} DIRECTORY)
 
+set(CPP2JSON_CORE_VERSION 1)
 add_library(cpp2json-core ${BACKEND_SOURCES})
 set_target_properties(cpp2json-core PROPERTIES COMPILE_FLAGS -fvisibility-inlines-hidden)
 target_link_libraries(cpp2json-core PUBLIC ${LLVM_LIBS_CORE} ${CLANG_LIBS} ${Boost_LIBRARIES} ${LLVM_LDFLAGS})

@@ -2,6 +2,7 @@
 #include "Cpp2JsonParameters.hpp"
 
 #include <clang/Lex/Lexer.h>
+#include <clang/Basic/SourceManager.h>
 
 #include <iostream>
 
@@ -24,7 +25,7 @@ namespace
 
     bool isNotAnAnnotation(clang::Attr* const attribute)
     {
-        return !clang::isa<clang::AnnotateAttr, clang::Attr*>(attribute);
+        return !clang::isa<clang::AnnotateAttr, clang::Attr>(attribute);
     }
 
     struct MatchText
@@ -396,7 +397,7 @@ void Cpp2JsonVisitor::parseIncludeDeclaration(clang::Decl* declaration, rapidjso
 {
     auto const& sourceManager = declaration->getASTContext().getSourceManager();
     auto const location = declaration->getLocation();
-    std::string const fileName = sourceManager.getFilename(location);
+    auto const fileName = sourceManager.getFilename(location).str();
 
     jsonObject.AddMember("file", fileName, m_jsonAllocator);
 }

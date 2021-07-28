@@ -4,8 +4,8 @@ project(cpp2json)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
-find_package(RapidJSON 1.1 REQUIRED)
-find_package(LLVM 10 REQUIRED)
+find_package(RapidJSON 1 REQUIRED)
+find_package(LLVM 11 REQUIRED)
 find_package(Clang REQUIRED)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/CreateOption.cmake")
