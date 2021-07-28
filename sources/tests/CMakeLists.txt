@@ -22,3 +22,6 @@ target_include_directories(unit_tests PRIVATE "${GTEST_INCLUDE_DIR}" "${PROJECT_
 set_property(TARGET unit_tests PROPERTY CXX_STANDARD 14)
 set_property(TARGET unit_tests PROPERTY CXX_STANDARD_REQUIRED ON)
 cpp2json_private_stuff(unit_tests PRIVATE)
+
+include(GoogleTest)
+gtest_discover_tests(unit_tests)

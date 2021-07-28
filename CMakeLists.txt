@@ -8,6 +8,8 @@ find_package(RapidJSON 1 REQUIRED)
 find_package(LLVM 11 REQUIRED)
 find_package(Clang REQUIRED)
 
+enable_testing()
+
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/CreateOption.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/GitInfo.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/PrependList.cmake")
