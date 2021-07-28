@@ -4,6 +4,8 @@ static std::string const LlvmBasePath{LLVM_DIR};
 
 clang::tooling::CommandLineArguments makeLlvmIncludeArguments()
 {
+    assert( !LlvmBasePath.empty() );
+
     std::string const llvmVersion = LlvmBasePath.substr(LlvmBasePath.find_last_of('/'));
     clang::tooling::CommandLineArguments extraArguments{
         "-I" + LlvmBasePath + "/include/c++/v1",
