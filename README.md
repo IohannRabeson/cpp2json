@@ -2,11 +2,29 @@
 
 ![general_usage](https://docs.google.com/drawings/d/e/2PACX-1vSvz2O3s9Oica9CyYAUq42n7U62ygswZS-CPsdTIPUDFLky-4Ff0zx-U-kBqJSubkmiBsJ9GsByTDsl/pub?w=1149&h=542)
 
-
 A tool to extract C++ information about enumerations, classes, methods and attributes.  
 All theses data are stored as JSON.
 
 Initial idea picked up from this conference by Sergiy Migdalskiy: https://archive.org/details/GDC2014Migdalskiy
+
+## Requirements
+
+- Llvm 11
+- RapidJson 1.x
+
+You might need to give the path to the llvm folder to CMake:
+```bash
+mkdir builds && cd builds
+cmake .. -G Ninja -DCMAKE_PREFIX_PATH=<your_path_to_llvm_install>
+ninja
+```
+With brew you can print the path using:
+```bash
+brew --prefix llvm
+```
+```bash
+cmake .. -G Ninja -DCMAKE_PREFIX_PATH="$(brew --prefix llvm)"
+```
 
 ## Example
 File test_example.hpp:
@@ -111,7 +129,7 @@ Main options:
   -p=<string>                              - Build path
   -pretty                                  - Output pretty JSON
 ```
-Note the --, it's really needed because this flag define where the options passed to the clang driver begins.  
+Note the -- is really needed because to define where the options passed to the clang driver begins.  
 If cpp2json can't find standard includes (it can happen if you have moved cpp2json in another location), you should specify
 yourself using the correct llvm include paths using `-I` (after the --).
 
@@ -122,37 +140,3 @@ Example:
 ```
 This is required because clang assume the executable is located in a standard directory (in llvm/bin) and use that
 to deduce the includes paths.
-
-## How to clone
-You should clone git submodules if you want to build tests:
-```bash
-    $> git clone --recursive git@github.com:IohannRabeson/cpp2json.git
-```
-
-## How to build
-You should generate the project out of the sources directory.  
-```bash
-   $> mkdir builds && cd builds
-   $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH=<your_path_to_llvm_install>
-   $> ninja
-```
-If you need to set more than one path to CMAKE_PREFIX_PATH separate each path by a semi-colon ';'. You should encloses the paths using double quotes ('`"`') since `;` is a special character on most shell.
-```bash
-   $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH="<llvm_path>;<qt_path>"
-```
-
-### Building with OSX
-On OSX hopefully we can use [Homebrew](https://brew.sh/index_fr.html) to install all dependencies.  
-This can be done with only one command:
-```bash
-    $> brew install llvm
-```
-And it's done. Use CMake to generate the project:
-```bash
-   $> cmake .. -G Ninja -DCMAKE_PREFIX_PATH="/usr/local/opt/llvm;/usr/local/opt/qt5"
-```
-
-Finally build:
-```bash
-    $> cmake --build .
-```
