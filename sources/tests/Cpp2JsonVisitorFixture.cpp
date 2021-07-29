@@ -54,7 +54,8 @@ rapidjson::Value::ConstObject Cpp2JsonVisitorFixture::getField(std::string const
             return field;
         }
     }
-    assert(false);
+
+    throw std::runtime_error("field not found");
 }
 
 rapidjson::Value::ConstArray Cpp2JsonVisitorFixture::getFieldsOf(const std::string &className) const

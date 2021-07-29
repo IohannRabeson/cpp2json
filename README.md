@@ -9,103 +9,18 @@ Initial idea picked up from this conference by Sergiy Migdalskiy: https://archiv
 
 ## Requirements
 
-- Llvm 11
+- MacOS
+- Llvm 11 - Llvm 12 is not supported
 - RapidJson 1.x
 
 You might need to give the path to the llvm folder to CMake:
 ```bash
+brew install llvm@11 rapidjson ninja
 mkdir builds && cd builds
-cmake .. -G Ninja -DCMAKE_PREFIX_PATH=<your_path_to_llvm_install>
+cmake .. -G Ninja -DCMAKE_PREFIX_PATH=$(brew --prefix llvm@11)
 ninja
 ```
-With brew you can print the path using:
-```bash
-brew --prefix llvm
-```
-```bash
-cmake .. -G Ninja -DCMAKE_PREFIX_PATH="$(brew --prefix llvm)"
-```
 
-## Example
-File test_example.hpp:
-```c++
-#ifndef CPP2JSON_TEST_EXAMPLE_HPP
-#define CPP2JSON_TEST_EXAMPLE_HPP
-#include <string>
-
-struct Example01
-{
-    float m_float;
-    std::string m_string;
-    int m_int;
-};
-
-#endif //CPP2JSON_TEST_EXAMPLE_HPP
-```
-
-Run cpp2json on it:
-```bash
-$> cpp2json test_example.hpp --pretty --
-```
-
-Will give you the following JSON output:
-```json
-{
-    "classes": {
-        "Example01": {
-            "fields": [
-                {
-                    "name": "m_float",
-                    "type": {
-                        "key": "float",
-                        "expression": "float",
-                        "pointer": false,
-                        "array": false,
-                        "reference": false,
-                        "const": false,
-                        "volatile": false,
-                        "literal": true,
-                        "enum": false
-                    }
-                },
-                {
-                    "name": "m_string",
-                    "type": {
-                        "key": "std::string",
-                        "expression": "std::string",
-                        "pointer": false,
-                        "array": false,
-                        "reference": false,
-                        "const": false,
-                        "volatile": false,
-                        "literal": false,
-                        "enum": false
-                    }
-                },
-                {
-                    "name": "m_int",
-                    "type": {
-                        "key": "int",
-                        "expression": "int",
-                        "pointer": false,
-                        "array": false,
-                        "reference": false,
-                        "const": false,
-                        "volatile": false,
-                        "literal": true,
-                        "enum": false
-                    }
-                }
-            ],
-            "methods": [],
-            "annotations": [],
-            "bases": [],
-            "file": "/Users/iota/projects/tools/cpp2json/sources/tests/resources/test_example.hpp"
-        }
-    },
-    "enums": {}
-}
-```
 ## Usage
 ```bash
 USAGE: cpp2json [options] <source0> [... <sourceN>]
